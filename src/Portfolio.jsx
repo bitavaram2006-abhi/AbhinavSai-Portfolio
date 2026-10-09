@@ -473,7 +473,12 @@ function Contact() {
     if (!valid) return;
     setStatus("sending");
     // TODO: replace with a real request (Formspree, EmailJS, your API...)
-    await new Promise((r) => setTimeout(r, 1200));
+    const res = await fetch("https://formspree.io/f/xrpeqrvv", {
+  method: "POST",
+  headers: { "Content-Type": "application/json", Accept: "application/json" },
+  body: JSON.stringify(f),
+});
+if (!res.ok) { setStatus("idle"); return; }
     setStatus("sent"); setF({ name: "", email: "", message: "" }); setTouched({});
     setTimeout(() => setStatus("idle"), 4500);
   };
