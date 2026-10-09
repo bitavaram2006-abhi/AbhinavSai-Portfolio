@@ -1,0 +1,593 @@
+import { useState, useEffect, useRef, useMemo } from "react";
+import {
+  motion, AnimatePresence, useScroll, useSpring, useInView, animate,
+  useMotionValue, useTransform, useReducedMotion,
+} from "framer-motion";
+import {
+  Menu, X, Mail, Phone, MapPin, Copy, Check, Send, ChevronDown, Award, Trophy,
+  Smartphone, Globe, Cloud, Wrench, Sparkles, Briefcase, GraduationCap, Code2,
+  ArrowRight, Layers, ShieldCheck, AlertCircle, Languages,
+} from "lucide-react";
+
+/* ----------------------------- DATA ----------------------------- */
+// Your photo: put it in /public (e.g. /public/profile.jpg) and set PROFILE_IMG = "/profile.jpg".
+// While it is empty, the placeholder silhouette below is shown.
+const PROFILE_IMG = "";
+const PLACEHOLDER = "data:image/svg+xml;utf8," + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#27272a"/><stop offset="1" stop-color="#09090b"/></linearGradient></defs><rect width="400" height="400" fill="url(#g)"/><circle cx="200" cy="155" r="68" fill="#52525b"/><path d="M60 400c0-84 62-140 140-140s140 56 140 140z" fill="#52525b"/></svg>`
+);
+const EMAIL = "bitavaram2006@gmail.com";
+const PHONE = "+91 9640659007";
+const NAV = ["home", "about", "skills", "experience", "projects", "certifications", "contact"];
+const glass = "border border-zinc-800/80 bg-zinc-950/70 backdrop-blur-xl";
+const go = (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+const STATS = [
+  { to: 9.55, dec: 2, label: "B.Tech CGPA (out of 10)" },
+  { to: 5, label: "Grade-O AICTE internships" },
+  { to: 100, suffix: "%", label: "C++ Genius Grade" },
+  { to: 30, suffix: "+", label: "Verifiable certifications" },
+];
+
+const TABS = [
+  { id: "all", label: "All", icon: Layers },
+  { id: "mobile", label: "Mobile/Languages", icon: Smartphone },
+  { id: "web", label: "Web/AI", icon: Globe },
+  { id: "cloud", label: "Cloud/Databases", icon: Cloud },
+  { id: "tools", label: "Tools", icon: Wrench },
+];
+const s = (cat, list) => list.map(([n, note]) => ({ cat, n, note }));
+const SKILLS = [
+  ...s("mobile", [["Java"], ["Python"], ["C++", "100% Sanfoundry Genius Grade"], ["C", "88% Grade A"], ["JavaScript"], ["SQL"], ["HTML5"], ["CSS3"]]),
+  ...s("web", [["Android SDK"], ["Django"], ["OpenAI API"], ["Hugging Face Transformers"], ["PyQt (GUI)"], ["Bootstrap"], ["jQuery"], ["TensorFlow"], ["OpenCV"]]),
+  ...s("cloud", [["AWS Cloud Foundations", "AWS Academy"], ["AWS Machine Learning Foundations", "AWS Academy"], ["MongoDB Administration", "TechA, Infosys Certified"], ["MySQL"], ["SQLite"]]),
+  ...s("tools", [["Git"], ["GitHub"], ["Microsoft Power BI"], ["Unity Engine"], ["Figma"], ["Visual Studio Code"]]),
+];
+const CAT_COLOR = { mobile: "#EF4444", web: "#F43F5E", cloud: "#F97316", tools: "#A1A1AA" };
+
+const EXP = [
+  { role: "Python Full Stack Development Intern", org: "AICTE – EduSkills", when: "Aug–Oct 2026 & Jan–Mar 2026", badge: "Grade-O",
+    pts: ["Engineered dynamic full-stack Django web platforms with responsive Bootstrap interfaces.", "Optimized MySQL database queries and API endpoints, reducing latency by 20%."] },
+  { role: "Prompt Engineering for AI Virtual Intern", org: "AICTE – EduSkills", when: "Apr–Jun 2026", badge: "Grade-O",
+    pts: ["Architected an AI-Powered Content Generation & Analysis platform capstone using OpenAI API and Hugging Face."] },
+  { role: "AR/VR Development with Unity Intern", org: "AICTE – EduSkills", when: "Jun–Aug 2026", badge: "Grade-O",
+    pts: ["Developed 3D spatial interactive environments and object manipulation mechanics using Unity Engine & C#."] },
+  { role: "Android Developer Virtual Intern", org: "Google & AICTE EduSkills", when: "Oct–Dec 2025", badge: "Grade-O",
+    pts: ["Built mobile application modules using Java and Android SDK lifecycle architecture principles."] },
+  { role: "Python Software Development Trainee", org: "Internshala", when: "May 2025", badge: "90% Top Performer",
+    pts: ["Built desktop GUI tools with PyQt and SQLite database integration."] },
+];
+
+// Edit the `stack` tags and `points` to match what you actually built.
+const PROJECTS = [
+  { t: "Arogya-Mitra", sub: "Rural Telemedicine Platform", event: "Smart India Hackathon (SIH 2025) Grand Finale", color: "#F97316",
+    desc: "A voice-assisted telemedicine software prototype for rural healthcare accessibility.",
+    stack: ["Telemedicine", "Voice-assisted", "Prototype"],
+    points: ["Voice-assisted interaction aimed at rural healthcare access", "Reached the SIH 2025 Grand Finale", "Served as National Student Coordinator"] },
+  { t: "Smart in Health", sub: "Automated Medicine Reminder System", event: "Cyberthon 2K26 (CBIT)", color: "#EF4444",
+    desc: "An automated health tracking application with dosage schedule storage and notification triggers.",
+    stack: ["Scheduling", "Notifications", "Health tracking"],
+    points: ["Stores dosage schedules per medicine", "Notification triggers remind users at dose time", "Built for Cyberthon 2K26 at CBIT"] },
+  { t: "AI Prototype Pipeline", sub: "Prompt evaluation backend", event: "HackWithAI, 24-hour offline hackathon at KLH University", color: "#F43F5E",
+    desc: "Backend execution logic and prompt evaluation pipelines built during a 24-hour sprint.",
+    stack: ["LLM prompts", "Backend", "Evaluation"],
+    points: ["Backend execution logic for the prototype", "Prompt evaluation pipelines", "Delivered within a 24-hour offline sprint"] },
+];
+
+const CERTS = [
+  { t: "AWS Academy Graduate", d: "Machine Learning Foundations & Cloud Foundations", icon: Cloud },
+  { t: "HackerRank Java (Basic)", d: "Skill certification", icon: Code2 },
+  { t: "MongoDB Administration", d: "TechA, Infosys Springboard", icon: ShieldCheck },
+  { t: "C++ & C", d: "C++ 100% Genius Grade, C 88% Grade A (Sanfoundry)", icon: Award },
+  { t: "EF SET C1 Advanced English", d: "Score 68/100", icon: Languages },
+  { t: "MoE Innovation Ambassador", d: "Foundation, Reskilling & Advanced", icon: Sparkles },
+];
+
+/* ----------------------------- HELPERS ----------------------------- */
+function useActive(ids) {
+  const [a, setA] = useState(ids[0]);
+  useEffect(() => {
+    const o = new IntersectionObserver(
+      (es) => es.forEach((e) => e.isIntersecting && setA(e.target.id)),
+      { rootMargin: "-45% 0px -50% 0px" }
+    );
+    ids.forEach((i) => { const el = document.getElementById(i); el && o.observe(el); });
+    return () => o.disconnect();
+  }, []);
+  return a;
+}
+
+function Counter({ to, dec = 0, suffix = "" }) {
+  const ref = useRef(null);
+  const seen = useInView(ref, { once: true });
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (!seen) return;
+    const c = animate(0, to, { duration: 2, ease: "easeOut", onUpdate: setN });
+    return () => c.stop();
+  }, [seen, to]);
+  return <span ref={ref}>{n.toFixed(dec)}{suffix}</span>;
+}
+
+function Section({ id, title, sub, children }) {
+  return (
+    <section id={id} className="mx-auto max-w-6xl scroll-mt-20 px-5 py-24">
+      <h2 className="text-3xl font-bold text-zinc-100 sm:text-4xl">{title}</h2>
+      {sub && <p className="mt-3 max-w-xl text-zinc-400">{sub}</p>}
+      <div className="mt-10">{children}</div>
+    </section>
+  );
+}
+
+function useCopy() {
+  const [done, setDone] = useState("");
+  const copy = async (text, key) => {
+    try { await navigator.clipboard.writeText(text); setDone(key); setTimeout(() => setDone(""), 1800); } catch {}
+  };
+  return [done, copy];
+}
+
+/* ----------------------------- NAVBAR ----------------------------- */
+function Navbar() {
+  const active = useActive(NAV);
+  const [open, setOpen] = useState(false);
+  const { scrollYProgress } = useScroll();
+  const bar = useSpring(scrollYProgress, { stiffness: 120, damping: 25 });
+  const jump = (id) => { setOpen(false); go(id); };
+  return (
+    <header className={`fixed inset-x-0 top-0 z-40 ${glass} border-x-0 border-t-0`}>
+      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
+        <button onClick={() => jump("home")} className="font-bold text-zinc-100">
+          Abhinav<span className="text-red-500">.dev</span>
+        </button>
+        <ul className="hidden gap-1 md:flex">
+          {NAV.map((id) => (
+            <li key={id}>
+              <button onClick={() => jump(id)} className="relative rounded-full px-3 py-1.5 text-sm capitalize text-zinc-300 hover:text-white">
+                {active === id && (
+                  <motion.span layoutId="nav-pill" className="absolute inset-0 rounded-full bg-red-500/20 ring-1 ring-red-500/40"
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }} />
+                )}
+                <span className="relative">{id}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <button aria-label="Toggle menu" className="text-zinc-200 md:hidden" onClick={() => setOpen(!open)}>
+          {open ? <X /> : <Menu />}
+        </button>
+      </nav>
+      <AnimatePresence>
+        {open && (
+          <motion.ul initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden border-t border-zinc-800/80 px-5 md:hidden">
+            {NAV.map((id) => (
+              <li key={id}>
+                <button onClick={() => jump(id)} className={`w-full py-3 text-left capitalize ${active === id ? "text-red-400" : "text-zinc-300"}`}>{id}</button>
+              </li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+      <motion.div style={{ scaleX: bar }} className="h-0.5 origin-left bg-gradient-to-r from-red-500 via-rose-500 to-orange-500" />
+    </header>
+  );
+}
+
+/* ----------------------------- HERO ----------------------------- */
+function Hero() {
+  const reduce = useReducedMotion();
+  const dots = useMemo(() => Array.from({ length: 28 }, (_, i) => ({
+    x: (i * 37) % 100, y: (i * 53) % 100, size: 2 + (i % 4), dur: 6 + (i % 7),
+    c: ["#EF4444", "#F97316", "#F43F5E"][i % 3],
+  })), []);
+  return (
+    <section id="home" className="relative flex min-h-screen items-center overflow-hidden pt-16">
+      <div aria-hidden className="absolute inset-0">
+        {[["-top-20 -left-20", "#EF4444", 0], ["top-1/3 -right-24", "#F43F5E", 2], ["-bottom-24 left-1/3", "#F97316", 4]].map(([pos, c, d], i) => (
+          <motion.div key={i} className={`absolute h-96 w-96 rounded-full blur-3xl ${pos}`} style={{ background: c, opacity: 0.3 }}
+            animate={reduce ? {} : { scale: [1, 1.25, 1], x: [0, 30, 0] }} transition={{ duration: 10, repeat: Infinity, delay: d }} />
+        ))}
+        {!reduce && dots.map((d, i) => (
+          <motion.span key={i} className="absolute rounded-full" style={{ left: `${d.x}%`, top: `${d.y}%`, width: d.size, height: d.size, background: d.c }}
+            animate={{ y: [0, -40, 0], opacity: [0.2, 0.9, 0.2] }} transition={{ duration: d.dur, repeat: Infinity, delay: i * 0.2 }} />
+        ))}
+      </div>
+
+      <div className="relative mx-auto max-w-6xl px-5 py-16">
+        <div className="flex flex-col-reverse gap-10 lg:flex-row lg:items-center lg:justify-between">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+          <div className="mb-6 flex flex-wrap gap-2">
+            {["5x AICTE Virtual Intern (Grade-O)", "SIH 2025 Grand Finale Coordinator", "Dual AWS Certified"].map((b, i) => (
+              <motion.span key={b} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 + i * 0.12 }}
+                className={`${glass} rounded-full px-3 py-1 text-xs text-zinc-200`}>{b}</motion.span>
+            ))}
+          </div>
+          <h1 className="text-5xl font-extrabold leading-tight sm:text-7xl">
+            <motion.span className="bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(90deg,#E4E4E7,#EF4444,#F97316,#E4E4E7)", backgroundSize: "300% 100%" }}
+              animate={reduce ? {} : { backgroundPosition: ["0% 0%", "300% 0%"] }} transition={{ duration: 8, repeat: Infinity, ease: "linear" }}>
+              B. Abhinav Sai
+            </motion.span>
+          </h1>
+          <p className="mt-3 text-xl text-zinc-300 sm:text-2xl">Computer Science & Software Engineer</p>
+          <p className="mt-5 max-w-2xl text-zinc-400">
+            Engineered for Innovation: Android Software Development, Full-Stack Python/Django Systems, AI Architectures & Cloud Engineering.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <motion.button whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(239,68,68,.55)" }} whileTap={{ scale: 0.97 }} onClick={() => go("projects")}
+              className="flex items-center gap-2 rounded-xl bg-red-600 px-6 py-3 font-semibold text-white">
+              View projects <ArrowRight size={18} />
+            </motion.button>
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={() => go("contact")}
+              className={`${glass} rounded-xl px-6 py-3 font-semibold text-zinc-100 hover:border-orange-500/60`}>
+              Contact me
+            </motion.button>
+          </div>
+        </motion.div>
+        <Avatar />
+        </div>
+
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.7 }}
+          className={`${glass} mt-14 grid grid-cols-2 gap-6 rounded-2xl p-6 md:grid-cols-4`}>
+          {STATS.map((m) => (
+            <div key={m.label}>
+              <div className="text-3xl font-bold text-zinc-100 sm:text-4xl"><Counter {...m} /></div>
+              <div className="mt-1 text-sm text-zinc-400">{m.label}</div>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+      <motion.button aria-label="Scroll to about" onClick={() => go("about")} className="absolute bottom-6 left-1/2 -tranzinc-x-1/2 text-zinc-500"
+        animate={reduce ? {} : { y: [0, 8, 0] }} transition={{ duration: 1.8, repeat: Infinity }}><ChevronDown /></motion.button>
+    </section>
+  );
+}
+
+function Avatar() {
+  const reduce = useReducedMotion();
+  return (
+    <motion.div initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4, duration: 0.7 }} className="relative mx-auto shrink-0 lg:mx-0">
+      <motion.div animate={reduce ? {} : { y: [0, -10, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} className="relative h-56 w-56 sm:h-72 sm:w-72">
+        <div aria-hidden className="absolute -inset-6 rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(220,38,38,.45), transparent 70%)" }} />
+        <motion.div aria-hidden className="absolute -inset-1 rounded-full" style={{ background: "conic-gradient(from 0deg, #EF4444, #09090b, #F97316, #09090b, #EF4444)" }}
+          animate={reduce ? {} : { rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} />
+        <img src={PROFILE_IMG || PLACEHOLDER} alt="B. Abhinav Sai" className="relative h-full w-full rounded-full border-4 object-cover" style={{ borderColor: "#060607" }} />
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/* ----------------------------- ABOUT ----------------------------- */
+function About() {
+  const items = [
+    { icon: GraduationCap, t: "B.Tech Computer Science & Engineering", d: "MLRITM, third year, expected 2028", c: "#EF4444" },
+    { icon: Languages, t: "C1 Advanced English", d: "EF SET, score 68/100", c: "#F97316" },
+    { icon: Briefcase, t: "113 hours of employability skills", d: "JobReady, Wadhwani Foundation", c: "#F43F5E" },
+  ];
+  return (
+    <Section id="about" title="About me">
+      <div className="grid gap-8 lg:grid-cols-5">
+        <motion.p initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
+          className="text-lg leading-relaxed text-zinc-300 lg:col-span-3">
+          I'm a third-year Computer Science & Engineering student at Marri Laxman Reddy Institute of Technology and Management (MLRITM, expected 2028).
+          I'm passionate about building scalable Android mobile apps supported by Google for Developers, full-stack web platforms, and LLM prompt engineering pipelines.
+        </motion.p>
+        <div className="space-y-3 lg:col-span-2">
+          {items.map(({ icon: I, t, d, c }, i) => (
+            <motion.div key={t} initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+              whileHover={{ x: 6 }} className={`${glass} flex items-start gap-4 rounded-xl p-4`}>
+              <I size={22} style={{ color: c }} className="mt-0.5 shrink-0" />
+              <div><div className="font-semibold text-zinc-100">{t}</div><div className="text-sm text-zinc-400">{d}</div></div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+/* ----------------------------- SKILLS ----------------------------- */
+function Skills() {
+  const [tab, setTab] = useState("all");
+  const list = tab === "all" ? SKILLS : SKILLS.filter((x) => x.cat === tab);
+  return (
+    <Section id="skills" title="Technical skills" sub="Filter by category to see what I use for each kind of work.">
+      <div role="tablist" className="mb-8 flex flex-wrap gap-2">
+        {TABS.map(({ id, label, icon: I }) => (
+          <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
+            className={`relative flex items-center gap-2 rounded-full px-4 py-2 text-sm ${tab === id ? "text-white" : "text-zinc-400 hover:text-zinc-200"}`}>
+            {tab === id && <motion.span layoutId="skill-tab" className="absolute inset-0 rounded-full bg-red-500/25 ring-1 ring-red-500/50" />}
+            <I size={15} className="relative" /><span className="relative">{label}</span>
+          </button>
+        ))}
+      </div>
+      <motion.div layout className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+        <AnimatePresence mode="popLayout">
+          {list.map((k) => (
+            <motion.div layout key={k.n} initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.85 }}
+              whileHover={{ scale: 1.06, borderColor: CAT_COLOR[k.cat] }} className={`${glass} rounded-xl p-4`}>
+              <span className="mb-2 block h-1.5 w-6 rounded-full" style={{ background: CAT_COLOR[k.cat] }} />
+              <div className="font-medium text-zinc-100">{k.n}</div>
+              {k.note && <div className="mt-1 text-xs text-zinc-400">{k.note}</div>}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </motion.div>
+    </Section>
+  );
+}
+
+/* ----------------------------- EXPERIENCE ----------------------------- */
+function Experience() {
+  const [open, setOpen] = useState(0);
+  return (
+    <Section id="experience" title="Internships & experience" sub="Select a role to expand its achievements.">
+      <div className="relative border-l border-zinc-800 pl-8">
+        {EXP.map((e, i) => {
+          const isOpen = open === i;
+          return (
+            <motion.div key={e.role} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} className="relative mb-6">
+              <motion.span initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }} transition={{ type: "spring", delay: 0.15 }}
+                style={{ left: -41, boxShadow: "0 0 16px #F97316" }} className="absolute top-6 h-4 w-4 rounded-full bg-orange-500" />
+              <button onClick={() => setOpen(isOpen ? -1 : i)} aria-expanded={isOpen}
+                className={`${glass} w-full rounded-2xl p-5 text-left transition-colors hover:border-red-500/50`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold text-zinc-100">{e.role}</h3>
+                    <p className="text-sm text-zinc-400">{e.org} · {e.when}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span style={{ background: "rgba(249,115,22,.15)", boxShadow: "0 0 14px rgba(249,115,22,.35)" }} className="rounded-full px-2.5 py-1 text-xs text-orange-300">
+                      <Trophy size={12} className="mr-1 inline" />{e.badge}
+                    </span>
+                    <motion.span animate={{ rotate: isOpen ? 180 : 0 }}><ChevronDown size={18} className="text-zinc-400" /></motion.span>
+                  </div>
+                </div>
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.ul initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                      {e.pts.map((p) => (
+                        <li key={p} className="mt-3 flex gap-2 text-sm text-zinc-300"><Check size={16} className="mt-0.5 shrink-0 text-orange-400" />{p}</li>
+                      ))}
+                    </motion.ul>
+                  )}
+                </AnimatePresence>
+              </button>
+            </motion.div>
+          );
+        })}
+      </div>
+    </Section>
+  );
+}
+
+/* ----------------------------- PROJECTS ----------------------------- */
+function Tilt({ children, onClick, color }) {
+  const x = useMotionValue(0), y = useMotionValue(0);
+  const rx = useSpring(useTransform(y, [-0.5, 0.5], [9, -9]), { stiffness: 220, damping: 20 });
+  const ry = useSpring(useTransform(x, [-0.5, 0.5], [-9, 9]), { stiffness: 220, damping: 20 });
+  const move = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    x.set((e.clientX - r.left) / r.width - 0.5); y.set((e.clientY - r.top) / r.height - 0.5);
+  };
+  return (
+    <motion.button onClick={onClick} onMouseMove={move} onMouseLeave={() => { x.set(0); y.set(0); }}
+      style={{ rotateX: rx, rotateY: ry, transformPerspective: 900, borderColor: color + "55" }} whileHover={{ scale: 1.03 }}
+      className={`${glass} flex h-full flex-col rounded-2xl p-6 text-left`}>
+      {children}
+    </motion.button>
+  );
+}
+
+function Projects() {
+  const [sel, setSel] = useState(null);
+  useEffect(() => {
+    if (!sel) return;
+    const k = (e) => e.key === "Escape" && setSel(null);
+    document.body.style.overflow = "hidden"; window.addEventListener("keydown", k);
+    return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", k); };
+  }, [sel]);
+  return (
+    <Section id="projects" title="Projects & hackathons" sub="Open a card for the deep dive.">
+      <div className="grid gap-6 md:grid-cols-3">
+        {PROJECTS.map((p) => (
+          <Tilt key={p.t} color={p.color} onClick={() => setSel(p)}>
+            <Trophy style={{ color: p.color }} />
+            <h3 className="mt-4 text-xl font-bold text-zinc-100">{p.t}</h3>
+            <p className="text-sm text-zinc-400">{p.sub}</p>
+            <p className="mt-2 text-sm" style={{ color: p.color }}>{p.event}</p>
+            <p className="mt-3 flex-1 text-sm text-zinc-300">{p.desc}</p>
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              {p.stack.map((t) => <span key={t} className="rounded-md bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300">{t}</span>)}
+            </div>
+            <span className="mt-5 flex items-center gap-1 text-sm font-medium text-zinc-100">View details <ArrowRight size={16} /></span>
+          </Tilt>
+        ))}
+      </div>
+      <AnimatePresence>
+        {sel && (
+          <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 p-5 backdrop-blur-sm"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSel(null)}>
+            <motion.div role="dialog" aria-modal="true" aria-label={sel.t} onClick={(e) => e.stopPropagation()}
+              initial={{ scale: 0.9, y: 30, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.9, y: 30, opacity: 0 }}
+              className={`${glass} relative w-full max-w-lg rounded-2xl p-7`} style={{ boxShadow: `0 0 60px ${sel.color}33` }}>
+              <button aria-label="Close" onClick={() => setSel(null)} className="absolute right-4 top-4 text-zinc-400 hover:text-white"><X /></button>
+              <h3 className="text-2xl font-bold text-zinc-100">{sel.t}</h3>
+              <p className="text-zinc-400">{sel.sub}</p>
+              <p className="mt-1 text-sm" style={{ color: sel.color }}>{sel.event}</p>
+              <p className="mt-4 text-zinc-300">{sel.desc}</p>
+              <ul className="mt-4 space-y-2">
+                {sel.points.map((p) => <li key={p} className="flex gap-2 text-sm text-zinc-300"><Check size={16} className="mt-0.5 shrink-0" style={{ color: sel.color }} />{p}</li>)}
+              </ul>
+              <div className="mt-5 flex flex-wrap gap-1.5">
+                {sel.stack.map((t) => <span key={t} className="rounded-md bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300">{t}</span>)}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Section>
+  );
+}
+
+/* ----------------------------- CERTIFICATIONS ----------------------------- */
+function Cert({ c }) {
+  const move = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty("--x", `${e.clientX - r.left}px`);
+    e.currentTarget.style.setProperty("--y", `${e.clientY - r.top}px`);
+  };
+  return (
+    <motion.div onMouseMove={move} whileHover={{ y: -4 }} className={`${glass} group relative overflow-hidden rounded-2xl p-5`}>
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{ background: "radial-gradient(220px circle at var(--x) var(--y), rgba(239,68,68,.28), transparent 70%)" }} />
+      <c.icon className="relative text-orange-400" />
+      <h3 className="relative mt-3 font-semibold text-zinc-100">{c.t}</h3>
+      <p className="relative mt-1 text-sm text-zinc-400">{c.d}</p>
+    </motion.div>
+  );
+}
+const Certs = () => (
+  <Section id="certifications" title="Certifications & accreditations">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{CERTS.map((c) => <Cert key={c.t} c={c} />)}</div>
+  </Section>
+);
+
+/* ----------------------------- CONTACT ----------------------------- */
+const RULES = {
+  name: (v) => (v.trim().length >= 2 ? "" : "Enter your name (2+ characters)."),
+  email: (v) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? "" : "Enter a valid email address."),
+  message: (v) => (v.trim().length >= 10 ? "" : "Write at least 10 characters."),
+};
+
+function Contact() {
+  const [f, setF] = useState({ name: "", email: "", message: "" });
+  const [touched, setTouched] = useState({});
+  const [status, setStatus] = useState("idle"); // idle | sending | sent
+  const [done, copy] = useCopy();
+  const err = Object.fromEntries(Object.keys(RULES).map((k) => [k, RULES[k](f[k])]));
+  const valid = !Object.values(err).some(Boolean);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setTouched({ name: true, email: true, message: true });
+    if (!valid) return;
+    setStatus("sending");
+    // TODO: replace with a real request (Formspree, EmailJS, your API...)
+    await new Promise((r) => setTimeout(r, 1200));
+    setStatus("sent"); setF({ name: "", email: "", message: "" }); setTouched({});
+    setTimeout(() => setStatus("idle"), 4500);
+  };
+
+  const field = (k, label, props = {}) => {
+    const bad = touched[k] && err[k], good = touched[k] && !err[k];
+    return (
+      <div>
+        <label htmlFor={k} className="mb-1 block text-sm text-zinc-300">{label}</label>
+        <div className="relative">
+          {props.rows ? (
+            <textarea id={k} {...props} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} onBlur={() => setTouched({ ...touched, [k]: true })}
+              className={`w-full rounded-xl border bg-zinc-950/60 px-4 py-3 text-zinc-100 outline-none transition-colors ${bad ? "border-red-500" : good ? "border-emerald-500" : "border-zinc-800 focus:border-zinc-500"}`} />
+          ) : (
+            <input id={k} {...props} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} onBlur={() => setTouched({ ...touched, [k]: true })}
+              className={`w-full rounded-xl border bg-zinc-950/60 px-4 py-3 pr-10 text-zinc-100 outline-none transition-colors ${bad ? "border-red-500" : good ? "border-emerald-500" : "border-zinc-800 focus:border-zinc-500"}`} />
+          )}
+          {!props.rows && good && <Check size={18} className="absolute right-3 top-3.5 text-emerald-400" />}
+          {!props.rows && bad && <AlertCircle size={18} className="absolute right-3 top-3.5 text-red-400" />}
+        </div>
+        <AnimatePresence>
+          {bad && <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-1 text-xs text-red-400">{err[k]}</motion.p>}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
+  const rows = [
+    { k: "email", icon: Mail, v: EMAIL, copy: true }, { k: "phone", icon: Phone, v: PHONE, copy: true },
+    { k: "loc", icon: MapPin, v: "Dundigal, Hyderabad, Telangana, India" },
+  ];
+  return (
+    <Section id="contact" title="Get in touch" sub="Open to internships, hackathon teams and collaborations.">
+      <div className="grid gap-8 lg:grid-cols-5">
+        <div className="space-y-3 lg:col-span-2">
+          {rows.map(({ k, icon: I, v, copy: c }) => (
+            <div key={k} className={`${glass} flex items-center gap-3 rounded-xl p-4`}>
+              <I size={20} className="shrink-0 text-red-400" />
+              <span className="min-w-0 flex-1 break-words text-sm text-zinc-200">{v}</span>
+              {c && (
+                <button aria-label={`Copy ${k}`} onClick={() => copy(v, k)} className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white">
+                  <AnimatePresence mode="wait" initial={false}>
+                    <motion.span key={done === k ? "ok" : "cp"} initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} className="block">
+                      {done === k ? <Check size={18} className="text-emerald-400" /> : <Copy size={18} />}
+                    </motion.span>
+                  </AnimatePresence>
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <form onSubmit={submit} noValidate className={`${glass} relative space-y-4 overflow-hidden rounded-2xl p-6 lg:col-span-3`}>
+          {field("name", "Name", { type: "text", autoComplete: "name" })}
+          {field("email", "Email", { type: "email", autoComplete: "email" })}
+          {field("message", "Message", { rows: 4 })}
+          <motion.button type="submit" disabled={status === "sending"} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-500 to-rose-500 px-6 py-3 font-semibold text-white disabled:opacity-60">
+            {status === "sending" ? "Sending…" : "Send message"} <Send size={16} />
+          </motion.button>
+          <AnimatePresence>
+            {status === "sent" && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-zinc-900/95">
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 220, damping: 12 }}
+                  style={{ background: "rgba(16,185,129,.2)", boxShadow: "0 0 40px rgba(16,185,129,.5)" }} className="rounded-full p-4"><Check size={36} className="text-emerald-400" /></motion.div>
+                <p className="text-lg font-semibold text-zinc-100">Message sent</p>
+                <p className="text-sm text-zinc-400">Thanks for reaching out. I'll reply soon.</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </form>
+      </div>
+    </Section>
+  );
+}
+
+function Blooms() {
+  const reduce = useReducedMotion();
+  const b = [
+    { pos: "-top-40 left-1/4", c: "rgba(185,28,28,.38)", s: 640, d: 0 },
+    { pos: "top-1/2 -right-40", c: "rgba(225,29,72,.26)", s: 560, d: 3 },
+    { pos: "-bottom-48 -left-32", c: "rgba(239,68,68,.22)", s: 600, d: 6 },
+  ];
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+      <div className="absolute inset-0" style={{ backgroundImage: "repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 1px, transparent 1px 4px)" }} />
+      {b.map((x, i) => (
+        <motion.div key={i} className={`absolute rounded-full blur-3xl ${x.pos}`}
+          style={{ width: x.s, height: x.s, background: `radial-gradient(circle, ${x.c}, transparent 65%)` }}
+          animate={reduce ? {} : { opacity: [0.5, 1, 0.5], scale: [1, 1.15, 1] }} transition={{ duration: 9, repeat: Infinity, delay: x.d }} />
+      ))}
+      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.75))" }} />
+    </div>
+  );
+}
+
+/* ----------------------------- APP ----------------------------- */
+export default function Portfolio() {
+  useEffect(() => {
+    const prev = [document.documentElement.style.background, document.body.style.background];
+    document.documentElement.style.background = document.body.style.background = "#060607";
+    document.documentElement.style.colorScheme = "dark";
+    return () => { [document.documentElement.style.background, document.body.style.background] = prev; };
+  }, []);
+  return (
+    <div style={{ background: "#060607", color: "#e4e4e7" }} className="relative min-h-screen scroll-smooth font-sans antialiased">
+      <Blooms />
+      <Navbar />
+      <main className="relative z-10">
+        <Hero /><About /><Skills /><Experience /><Projects /><Certs /><Contact />
+      </main>
+      <footer className="relative z-10 border-t border-zinc-800/80 py-8 text-center text-sm text-zinc-500">
+        © {new Date().getFullYear()} B. Abhinav Sai
+      </footer>
+    </div>
+  );
+}
