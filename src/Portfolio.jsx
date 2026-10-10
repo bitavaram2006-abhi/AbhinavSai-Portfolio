@@ -220,6 +220,47 @@ function Navbar() {
 }
 
 /* ----------------------------- HERO ----------------------------- */
+function HeroName() {
+  const reduce = useReducedMotion();
+  const [full, setFull] = useState(false);
+  const k = reduce ? 0 : 1;
+
+  // collapses/expands a piece of text smoothly, with its own duration and delay
+  const slot = (open, dur, delay) => ({
+    display: "inline-grid",
+    verticalAlign: "bottom",
+    gridTemplateColumns: open ? "1fr" : "0fr",
+    transition: `grid-template-columns ${dur * k}s ease ${delay * k}s`,
+  });
+  const clip = { overflow: "hidden", whiteSpace: "nowrap", minWidth: 0 };
+
+  return (
+    <span
+      tabIndex={0}
+      className="inline-grid cursor-pointer outline-none"
+      onMouseEnter={() => setFull(true)}
+      onMouseLeave={() => setFull(false)}
+      onFocus={() => setFull(true)}
+      onBlur={() => setFull(false)}
+      onClick={() => { if (window.matchMedia("(hover: none)").matches) setFull((v) => !v); }}
+    >
+      <span className="sr-only">Bitavaram Abhinav Sai</span>
+
+      {/* invisible copy reserves the full width so the hover area never moves */}
+      <span aria-hidden="true" className="invisible col-start-1 row-start-1 hidden whitespace-nowrap sm:inline">
+        Bitavaram Abhinav Sai
+      </span>
+
+      <span aria-hidden="true" className="col-start-1 row-start-1">
+        B
+        <span style={slot(full, 0.45, full ? 0.15 : 0)}><span style={clip}>itavaram</span></span>
+        <span style={slot(!full, 0.2, full ? 0 : 0.35)}><span style={clip}>.</span></span>
+        {" "}Abhinav Sai
+      </span>
+    </span>
+  );
+}
+
 function Hero() {
   const reduce = useReducedMotion();
   const dots = useMemo(() => Array.from({ length: 12 }, (_, i) => ({
@@ -248,10 +289,10 @@ function Hero() {
                 className={`${glass} rounded-full px-3 py-1 text-xs text-zinc-200`}>{b}</motion.span>
             ))}
           </div>
-          <h1 className="text-5xl font-extrabold leading-tight sm:text-7xl">
+          <h1 className="text-5xl font-extrabold leading-tight sm:text-6xl">
             <motion.span className="bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(90deg,#E4E4E7,#EF4444,#F97316,#E4E4E7)", backgroundSize: "300% 100%" }}
               animate={reduce ? {} : { backgroundPosition: ["0% 0%", "300% 0%"] }} transition={{ duration: 8, repeat: Infinity, ease: "linear" }}>
-              B. Abhinav Sai
+              <HeroName />
             </motion.span>
           </h1>
           <p className="mt-3 text-xl text-zinc-300 sm:text-2xl">Computer Science & Software Engineer</p>
