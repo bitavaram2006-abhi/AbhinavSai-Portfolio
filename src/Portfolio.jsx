@@ -103,6 +103,7 @@ const PROJECTS = [
     stack: ["Telemedicine", "Voice-assisted", "Prototype"],
     points: ["Voice-assisted interaction aimed at rural healthcare access", "Reached the SIH 2025 Grand Finale", "Served as National Student Coordinator"] },
   { t: "Re-Medic", sub: "Automated Medicine Reminder System", event: "Cyberthon 2K26 (CBIT)", color: "#EF4444",
+    live: "https://re-medic.vercel.app/",
     desc: "An automated health tracking application with dosage schedule storage and notification triggers.",
     stack: ["Scheduling", "Notifications", "Health tracking", "Prototype"],
     points: ["Stores dosage schedules per medicine", "Notification triggers remind users at dose time", "Built for Cyberthon 2K26 at CBIT"] },
@@ -547,6 +548,13 @@ function ProjectDetails({ p, onClose }) {
           <li key={pt} className="flex gap-2 text-sm text-zinc-300"><Check size={16} className="mt-0.5 shrink-0" style={{ color: p.color }} />{pt}</li>
         ))}
       </ul>
+
+      {p.live && (
+        <a href={p.live} target="_blank" rel="noopener noreferrer"
+          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-500">
+          Open live app <ExternalLink size={15} />
+        </a>
+      )}
 
       {p.images?.map((img) => (
         <figure key={img.label} className="mt-6">
