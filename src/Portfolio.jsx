@@ -6,7 +6,7 @@ import {
 import {
   Menu, X, Mail, Phone, MapPin, Copy, Check, Send, ChevronDown, Award, Trophy,
   Smartphone, Globe, Cloud, Wrench, Sparkles, Briefcase, GraduationCap, Code2,
-  ArrowRight, Layers, ShieldCheck, AlertCircle, Languages,
+  ArrowRight, Layers, ShieldCheck, AlertCircle, Languages, FileText, ExternalLink, Download
 } from "lucide-react";
 
 /* ----------------------------- DATA ----------------------------- */
@@ -85,8 +85,15 @@ const EXP = [
     pts: ["Developed 3D spatial interactive environments and object manipulation mechanics using Unity Engine & C#."] },
   { role: "Android Developer Virtual Intern", org: "Google & AICTE EduSkills", when: "Oct–Dec 2025", badge: "Grade-O",
     pts: ["Built mobile application modules using Java and Android SDK lifecycle architecture principles."] },
+  { role: "Graphic Design Intern", org: "Inamigos Foundation", when: "Sep-Oct 2025", badge: "Completed",
+  pts: ["Worked as a graphic design intern at Inamigos Foundation and Regoniized as Top Performer."],
+  docs: [
+  { label: "Recommendation Letter", file: "/docs/inamigos-recommendation.pdf" },
+  { label: "Certificates of Appreciation & Participation", file: "/docs/inamigos-certificates.pdf" },
+],
+  work: { label: "View my design work", href: "https://drive.google.com/PASTE-YOUR-LINK" } },
   { role: "Python Software Development Trainee", org: "Internshala", when: "May 2025", badge: "90% Top Performer",
-    pts: ["Built desktop GUI tools with PyQt and SQLite database integration."] },
+  pts: ["Built desktop GUI tools with PyQt and SQLite database integration."] },
 ];
 
 // Edit the `stack` tags and `points` to match what you actually built.
@@ -350,8 +357,41 @@ function Skills() {
 }
 
 /* ----------------------------- EXPERIENCE ----------------------------- */
+function DocViewer({ doc, onClose }) {
+  useEffect(() => {
+    const k = (e) => e.key === "Escape" && onClose();
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", k);
+    return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", k); };
+  }, []);
+  const isPdf = doc.file.toLowerCase().endsWith(".pdf");
+  return (
+    <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+      <motion.div role="dialog" aria-modal="true" aria-label={doc.label} onClick={(e) => e.stopPropagation()}
+        initial={{ scale: 0.92, y: 30, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.92, y: 30, opacity: 0 }}
+        className={`${glass} flex w-full max-w-3xl flex-col rounded-2xl`} style={{ height: "85vh" }}>
+        <div className="flex items-center justify-between gap-3 border-b border-zinc-800 px-5 py-3">
+          <h3 className="font-semibold text-zinc-100">{doc.label}</h3>
+          <div className="flex items-center gap-1">
+            <a href={doc.file} target="_blank" rel="noopener noreferrer" aria-label="Open in new tab" className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"><ExternalLink size={18} /></a>
+            <a href={doc.file} download aria-label="Download" className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"><Download size={18} /></a>
+            <button onClick={onClose} aria-label="Close" className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"><X size={18} /></button>
+          </div>
+        </div>
+        <div className="min-h-0 flex-1 overflow-auto p-2">
+          {isPdf
+            ? <iframe src={doc.file} title={doc.label} className="h-full w-full rounded-lg bg-white" />
+            : <img src={doc.file} alt={doc.label} className="mx-auto max-h-full max-w-full object-contain" />}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 function Experience() {
   const [open, setOpen] = useState(0);
+  const [doc, setDoc] = useState(null);
   return (
     <Section id="experience" title="Internships & experience" sub="Select a role to expand its achievements.">
       <div className="relative border-l border-zinc-800 pl-8">
@@ -361,34 +401,59 @@ function Experience() {
             <motion.div key={e.role} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} className="relative mb-6">
               <motion.span initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }} transition={{ type: "spring", delay: 0.15 }}
                 style={{ left: -41, boxShadow: "0 0 16px #F97316" }} className="absolute top-6 h-4 w-4 rounded-full bg-orange-500" />
-              <button onClick={() => setOpen(isOpen ? -1 : i)} aria-expanded={isOpen}
-                className={`${glass} w-full rounded-2xl p-5 text-left transition-colors hover:border-red-500/50`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-semibold text-zinc-100">{e.role}</h3>
-                    <p className="text-sm text-zinc-400">{e.org} · {e.when}</p>
+              <div className={`${glass} rounded-2xl transition-colors hover:border-red-500/50`}>
+                <button onClick={() => setOpen(isOpen ? -1 : i)} aria-expanded={isOpen} className="w-full p-5 text-left">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold text-zinc-100">{e.role}</h3>
+                      <p className="text-sm text-zinc-400">{e.org} · {e.when}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span style={{ background: "rgba(249,115,22,.15)", boxShadow: "0 0 14px rgba(249,115,22,.35)" }} className="rounded-full px-2.5 py-1 text-xs text-orange-300">
+                        <Trophy size={12} className="mr-1 inline" />{e.badge}
+                      </span>
+                      <motion.span animate={{ rotate: isOpen ? 180 : 0 }}><ChevronDown size={18} className="text-zinc-400" /></motion.span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span style={{ background: "rgba(249,115,22,.15)", boxShadow: "0 0 14px rgba(249,115,22,.35)" }} className="rounded-full px-2.5 py-1 text-xs text-orange-300">
-                      <Trophy size={12} className="mr-1 inline" />{e.badge}
-                    </span>
-                    <motion.span animate={{ rotate: isOpen ? 180 : 0 }}><ChevronDown size={18} className="text-zinc-400" /></motion.span>
-                  </div>
-                </div>
+                </button>
                 <AnimatePresence initial={false}>
                   {isOpen && (
-                    <motion.ul initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                      {e.pts.map((p) => (
-                        <li key={p} className="mt-3 flex gap-2 text-sm text-zinc-300"><Check size={16} className="mt-0.5 shrink-0 text-orange-400" />{p}</li>
-                      ))}
-                    </motion.ul>
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                      <div className="px-5 pb-5">
+                        <ul>
+                          {e.pts.map((p) => (
+                            <li key={p} className="mt-2 flex gap-2 text-sm text-zinc-300"><Check size={16} className="mt-0.5 shrink-0 text-orange-400" />{p}</li>
+                          ))}
+                        </ul>
+                        {e.docs && (
+                          <div className="mt-5">
+                            <p className="mb-2 text-xs text-zinc-500">Documents</p>
+                            <div className="flex flex-wrap gap-2">
+                              {e.docs.map((d) => (
+                                <button key={d.label} onClick={() => setDoc(d)}
+                                  className="flex items-center gap-2 rounded-lg border border-zinc-700 px-3 py-2 text-sm text-zinc-200 hover:border-red-500/60 hover:text-red-400">
+                                  <FileText size={15} />{d.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {e.work && (
+                          <a href={e.work.href} target="_blank" rel="noopener noreferrer"
+                            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500">
+                            {e.work.label} <ExternalLink size={15} />
+                          </a>
+                        )}
+                      </div>
+                    </motion.div>
                   )}
                 </AnimatePresence>
-              </button>
+              </div>
             </motion.div>
           );
         })}
       </div>
+      <AnimatePresence>{doc && <DocViewer doc={doc} onClose={() => setDoc(null)} />}</AnimatePresence>
     </Section>
   );
 }
