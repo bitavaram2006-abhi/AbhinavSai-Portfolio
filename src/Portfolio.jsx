@@ -98,13 +98,13 @@ const EXP = [
 
 // Edit the `stack` tags and `points` to match what you actually built.
 const PROJECTS = [
-  { t: "Re-Medic", sub: "Rural Telemedicine Platform", event: "Smart India Hackathon (SIH 2025) Grand Finale", color: "#F97316",
+  { t: "Arogya-Mitra", sub: "Rural Telemedicine Platform", event: "Smart India Hackathon (SIH 2025) Grand Finale", color: "#F97316",
     desc: "A voice-assisted telemedicine software prototype for rural healthcare accessibility.",
     stack: ["Telemedicine", "Voice-assisted", "Prototype"],
     points: ["Voice-assisted interaction aimed at rural healthcare access", "Reached the SIH 2025 Grand Finale", "Served as National Student Coordinator"] },
-  { t: "Smart in Health", sub: "Automated Medicine Reminder System", event: "Cyberthon 2K26 (CBIT)", color: "#EF4444",
+  { t: "Re-Medic", sub: "Automated Medicine Reminder System", event: "Cyberthon 2K26 (CBIT)", color: "#EF4444",
     desc: "An automated health tracking application with dosage schedule storage and notification triggers.",
-    stack: ["Scheduling", "Notifications", "Health tracking"],
+    stack: ["Scheduling", "Notifications", "Health tracking", "Prototype"],
     points: ["Stores dosage schedules per medicine", "Notification triggers remind users at dose time", "Built for Cyberthon 2K26 at CBIT"] },
   { t: "Hospitality Sentiment Repair Agent", sub: "Prototype by Team ClearVision", team: "ClearVision",
   event: "HackWithAI, 24-hour offline hackathon at KLH University", color: "#F43F5E",
