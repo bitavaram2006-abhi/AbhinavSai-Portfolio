@@ -315,7 +315,7 @@ function About() {
       <div className="grid gap-8 lg:grid-cols-5">
         <motion.p initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
           className="text-lg leading-relaxed text-zinc-300 lg:col-span-3">
-          I'm a third-year Computer Science & Engineering student at Marri Laxman Reddy Institute of Technology and Management (MLRITM, expected 2028).
+          I'm a third-year Computer Science & Engineering student at Marri Laxman Reddy Institute of Technology and Management (MLRITM, 2028).
           I'm passionate about building scalable Android mobile apps supported by Google for Developers, full-stack web platforms, and LLM prompt engineering pipelines.
         </motion.p>
         <div className="space-y-3 lg:col-span-2">
