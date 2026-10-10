@@ -91,7 +91,7 @@ const EXP = [
   { label: "Recommendation Letter", file: "/docs/inamigos-recommendation.pdf" },
   { label: "Certificates of Appreciation & Participation", file: "/docs/inamigos-certificates.pdf" },
 ],
-  //work: { label: "View my design work", href: "https://drive.google.com/PASTE-YOUR-LINK" } },
+  work: { label: "View my design work", href: "https://drive.google.com/PASTE-YOUR-LINK" } },
   { role: "Python Software Development Trainee", org: "Internshala", when: "May 2025", badge: "90% Top Performer",
   pts: ["Built desktop GUI tools with PyQt and SQLite database integration."] },
 ];
