@@ -98,7 +98,7 @@ const EXP = [
 
 // Edit the `stack` tags and `points` to match what you actually built.
 const PROJECTS = [
-  { t: "Arogya-Mitra", sub: "Rural Telemedicine Platform", event: "Smart India Hackathon (SIH 2025) Grand Finale", color: "#F97316",
+  { t: "Re-Medic", sub: "Rural Telemedicine Platform", event: "Smart India Hackathon (SIH 2025) Grand Finale", color: "#F97316",
     desc: "A voice-assisted telemedicine software prototype for rural healthcare accessibility.",
     stack: ["Telemedicine", "Voice-assisted", "Prototype"],
     points: ["Voice-assisted interaction aimed at rural healthcare access", "Reached the SIH 2025 Grand Finale", "Served as National Student Coordinator"] },
