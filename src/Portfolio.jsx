@@ -19,7 +19,7 @@ const PLACEHOLDER = "data:image/svg+xml;utf8," + encodeURIComponent(
 const EMAIL = "bitavaram2006@gmail.com";
 const PHONE = "+91 9640659007";
 const NAV = ["home", "about", "skills", "experience", "projects", "certifications", "contact"];
-const glass = "border border-zinc-800/80 bg-zinc-950/70 backdrop-blur-xl";
+const glass = "border border-zinc-800/80 bg-zinc-950/85";
 const LINKEDIN = "https://www.linkedin.com/in/abhinavsaibitavaram09";
 const WHATSAPP = "https://wa.me/919640659007?text=" + encodeURIComponent("Hi Abhinav, I saw your portfolio.");
 
@@ -54,7 +54,7 @@ function SocialButtons() {
 }
 const go = (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 const STATS = [
-  { to: 9.55, dec: 2, label: "B.Tech CGPA (out of 10)" },
+  { to: 9.02, dec: 2, label: "B.Tech CGPA (out of 10)" },
   { to: 5, label: "Grade-O AICTE internships" },
   { to: 100, suffix: "%", label: "C++ Genius Grade" },
   { to: 30, suffix: "+", label: "Verifiable certifications" },
@@ -208,7 +208,7 @@ function Navbar() {
 /* ----------------------------- HERO ----------------------------- */
 function Hero() {
   const reduce = useReducedMotion();
-  const dots = useMemo(() => Array.from({ length: 28 }, (_, i) => ({
+  const dots = useMemo(() => Array.from({ length: 12 }, (_, i) => ({
     x: (i * 37) % 100, y: (i * 53) % 100, size: 2 + (i % 4), dur: 6 + (i % 7),
     c: ["#EF4444", "#F97316", "#F43F5E"][i % 3],
   })), []);
@@ -216,7 +216,7 @@ function Hero() {
     <section id="home" className="relative flex min-h-screen items-center overflow-hidden pt-16">
       <div aria-hidden className="absolute inset-0">
         {[["-top-20 -left-20", "#EF4444", 0], ["top-1/3 -right-24", "#F43F5E", 2], ["-bottom-24 left-1/3", "#F97316", 4]].map(([pos, c, d], i) => (
-          <motion.div key={i} className={`absolute h-96 w-96 rounded-full blur-3xl ${pos}`} style={{ background: c, opacity: 0.3 }}
+          <motion.div key={i} className={`absolute h-96 w-96 rounded-full ${pos}`} style={{ background: `radial-gradient(circle, ${c}, transparent 70%)`, opacity: 0.5 }}
             animate={reduce ? {} : { scale: [1, 1.25, 1], x: [0, 30, 0] }} transition={{ duration: 10, repeat: Infinity, delay: d }} />
         ))}
         {!reduce && dots.map((d, i) => (
@@ -280,7 +280,7 @@ function Avatar() {
   return (
     <motion.div initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4, duration: 0.7 }} className="relative mx-auto shrink-0 lg:mx-0">
       <motion.div animate={reduce ? {} : { y: [0, -10, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} className="relative h-56 w-56 sm:h-72 sm:w-72">
-        <div aria-hidden className="absolute -inset-6 rounded-full blur-3xl" style={{ background: "radial-gradient(circle, rgba(220,38,38,.45), transparent 70%)" }} />
+        <div aria-hidden className="absolute -inset-6 rounded-full" style={{ background: "radial-gradient(circle, rgba(220,38,38,.45), transparent 70%)" }} />
         <motion.div aria-hidden className="absolute -inset-1 rounded-full" style={{ background: "conic-gradient(from 0deg, #EF4444, #09090b, #F97316, #09090b, #EF4444)" }}
           animate={reduce ? {} : { rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} />
         <img src={PROFILE_IMG || PLACEHOLDER} alt="B. Abhinav Sai" className="relative h-full w-full rounded-full border-4 object-cover" style={{ borderColor: "#060607" }} />
@@ -602,9 +602,9 @@ function Blooms() {
     <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
       <div className="absolute inset-0" style={{ backgroundImage: "repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 1px, transparent 1px 4px)" }} />
       {b.map((x, i) => (
-        <motion.div key={i} className={`absolute rounded-full blur-3xl ${x.pos}`}
+        <motion.div key={i} className={`absolute rounded-full ${x.pos}`}
           style={{ width: x.s, height: x.s, background: `radial-gradient(circle, ${x.c}, transparent 65%)` }}
-          animate={reduce ? {} : { opacity: [0.5, 1, 0.5], scale: [1, 1.15, 1] }} transition={{ duration: 9, repeat: Infinity, delay: x.d }} />
+          animate={reduce ? {} : { opacity: [0.5, 1, 0.5]}} transition={{ duration: 9, repeat: Infinity, delay: x.d }} />
       ))}
       <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.75))" }} />
     </div>
