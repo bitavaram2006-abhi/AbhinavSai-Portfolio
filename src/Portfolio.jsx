@@ -91,7 +91,7 @@ const EXP = [
   { label: "Recommendation Letter", file: "/docs/inamigos-recommendation.pdf" },
   { label: "Certificates of Appreciation & Participation", file: "/docs/inamigos-certificates.pdf" },
 ],
-  work: { label: "View my design work", href: "https://drive.google.com/PASTE-YOUR-LINK" } },
+  //work: { label: "View my design work", href: "https://drive.google.com/PASTE-YOUR-LINK" } },
   { role: "Python Software Development Trainee", org: "Internshala", when: "May 2025", badge: "90% Top Performer",
   pts: ["Built desktop GUI tools with PyQt and SQLite database integration."] },
 ];
@@ -106,10 +106,17 @@ const PROJECTS = [
     desc: "An automated health tracking application with dosage schedule storage and notification triggers.",
     stack: ["Scheduling", "Notifications", "Health tracking"],
     points: ["Stores dosage schedules per medicine", "Notification triggers remind users at dose time", "Built for Cyberthon 2K26 at CBIT"] },
-  { t: "AI Prototype Pipeline", sub: "Prompt evaluation backend", event: "HackWithAI, 24-hour offline hackathon at KLH University", color: "#F43F5E",
-    desc: "Backend execution logic and prompt evaluation pipelines built during a 24-hour sprint.",
-    stack: ["LLM prompts", "Backend", "Evaluation"],
-    points: ["Backend execution logic for the prototype", "Prompt evaluation pipelines", "Delivered within a 24-hour offline sprint"] },
+  { t: "Hospitality Sentiment Repair Agent", sub: "Prototype by Team ClearVision", team: "ClearVision",
+  event: "HackWithAI, 24-hour offline hackathon at KLH University", color: "#F43F5E",
+  logo: "/projects/clearvision/logo.png",
+  desc: "A prototype AI agent built to repair guest sentiment in the hospitality industry.",
+  stack: ["Prototype", "AI agent", "Sentiment analysis"],
+  points: ["Built by Team ClearVision as a working HTML prototype", "Problem statement and system architecture shown below", "Try the prototype live from this page"],
+  images: [
+    { label: "Problem statement", src: "/projects/clearvision/problem-statement.jpeg" },
+    { label: "System architecture", src: "/projects/clearvision/architecture.png" },
+  ],
+  prototype: "/projects/clearvision/prototype/index.html" },
 ];
 
 const CERTS = [
@@ -476,6 +483,62 @@ function Tilt({ children, onClick, color }) {
   );
 }
 
+function ProjectDetails({ p, onClose }) {
+  const [preview, setPreview] = useState(false);
+  return (
+    <div>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-4">
+          {p.logo && <img src={p.logo} alt={`${p.team} logo`} className="h-16 w-16 shrink-0 rounded-xl object-contain" />}
+          <div>
+            <h3 className="text-2xl font-bold text-zinc-100">{p.t}</h3>
+            <p className="text-zinc-400">{p.sub}</p>
+            {p.team && <p className="mt-1 text-sm font-semibold" style={{ color: p.color }}>Team {p.team}</p>}
+          </div>
+        </div>
+        <button aria-label="Close" onClick={onClose} className="shrink-0 text-zinc-400 hover:text-white"><X /></button>
+      </div>
+
+      <p className="mt-3 text-sm" style={{ color: p.color }}>{p.event}</p>
+      <p className="mt-4 text-zinc-300">{p.desc}</p>
+      <ul className="mt-4 space-y-2">
+        {p.points.map((pt) => (
+          <li key={pt} className="flex gap-2 text-sm text-zinc-300"><Check size={16} className="mt-0.5 shrink-0" style={{ color: p.color }} />{pt}</li>
+        ))}
+      </ul>
+
+      {p.images?.map((img) => (
+        <figure key={img.label} className="mt-6">
+          <figcaption className="mb-2 text-sm font-semibold text-zinc-200">{img.label}</figcaption>
+          <a href={img.src} target="_blank" rel="noopener noreferrer" title="Open full size">
+            <img src={img.src} alt={img.label} loading="lazy" className="w-full rounded-xl border border-zinc-800 bg-zinc-900 object-contain" />
+          </a>
+        </figure>
+      ))}
+
+      {p.prototype && (
+        <div className="mt-6">
+          <p className="mb-2 text-sm font-semibold text-zinc-200">Prototype</p>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => setPreview(!preview)} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500">
+              {preview ? "Hide live preview" : "Show live preview"}
+            </button>
+            <a href={p.prototype} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-200 hover:border-red-500/60 hover:text-red-400">
+              Open in new tab <ExternalLink size={15} />
+            </a>
+          </div>
+          {preview && <iframe src={p.prototype} title={`${p.t} prototype`} className="mt-3 w-full rounded-xl border border-zinc-800 bg-white" style={{ height: 480 }} />}
+        </div>
+      )}
+
+      <div className="mt-6 flex flex-wrap gap-1.5">
+        {p.stack.map((t) => <span key={t} className="rounded-md bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300">{t}</span>)}
+      </div>
+    </div>
+  );
+}
+
 function Projects() {
   const [sel, setSel] = useState(null);
   useEffect(() => {
@@ -489,7 +552,9 @@ function Projects() {
       <div className="grid gap-6 md:grid-cols-3">
         {PROJECTS.map((p) => (
           <Tilt key={p.t} color={p.color} onClick={() => setSel(p)}>
-            <Trophy style={{ color: p.color }} />
+            {p.logo
+              ? <img src={p.logo} alt={`${p.team} logo`} className="h-12 w-12 rounded-lg object-contain" />
+              : <Trophy style={{ color: p.color }} />}
             <h3 className="mt-4 text-xl font-bold text-zinc-100">{p.t}</h3>
             <p className="text-sm text-zinc-400">{p.sub}</p>
             <p className="mt-2 text-sm" style={{ color: p.color }}>{p.event}</p>
@@ -507,18 +572,9 @@ function Projects() {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSel(null)}>
             <motion.div role="dialog" aria-modal="true" aria-label={sel.t} onClick={(e) => e.stopPropagation()}
               initial={{ scale: 0.9, y: 30, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.9, y: 30, opacity: 0 }}
-              className={`${glass} relative w-full max-w-lg rounded-2xl p-7`} style={{ boxShadow: `0 0 60px ${sel.color}33` }}>
-              <button aria-label="Close" onClick={() => setSel(null)} className="absolute right-4 top-4 text-zinc-400 hover:text-white"><X /></button>
-              <h3 className="text-2xl font-bold text-zinc-100">{sel.t}</h3>
-              <p className="text-zinc-400">{sel.sub}</p>
-              <p className="mt-1 text-sm" style={{ color: sel.color }}>{sel.event}</p>
-              <p className="mt-4 text-zinc-300">{sel.desc}</p>
-              <ul className="mt-4 space-y-2">
-                {sel.points.map((p) => <li key={p} className="flex gap-2 text-sm text-zinc-300"><Check size={16} className="mt-0.5 shrink-0" style={{ color: sel.color }} />{p}</li>)}
-              </ul>
-              <div className="mt-5 flex flex-wrap gap-1.5">
-                {sel.stack.map((t) => <span key={t} className="rounded-md bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300">{t}</span>)}
-              </div>
+              className={`${glass} relative w-full max-w-3xl rounded-2xl p-7`}
+              style={{ boxShadow: `0 0 60px ${sel.color}33`, maxHeight: "88vh", overflowY: "auto" }}>
+              <ProjectDetails p={sel} onClose={() => setSel(null)} />
             </motion.div>
           </motion.div>
         )}
