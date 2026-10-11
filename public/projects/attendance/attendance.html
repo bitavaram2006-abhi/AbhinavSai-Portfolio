@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Attendance Calculator & Predictor</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --accent:#7c3aed; --muted:#94a3b8; --glass: rgba(255,255,255,0.04);
+      --good:#16a34a; --warn:#f59e0b; --bad:#ef4444;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial;color:#e6eef8;background:linear-gradient(180deg,#071024 0%,#071827 60%);-webkit-font-smoothing:antialiased}
+    .wrap{max-width:980px;margin:36px auto;padding:28px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;box-shadow:0 10px 30px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#06b6d4);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:18px;box-shadow:0 6px 18px rgba(124,58,237,0.18)}
+    h1{margin:0;font-size:20px}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+
+    .grid{display:grid;grid-template-columns:1fr 420px;gap:20px}
+    .card{background:var(--card);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.02)}
+
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    input[type=number], select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:var(--glass);color:inherit;font-size:14px}
+    .actions{display:flex;gap:8px;margin-top:12px}
+    button{cursor:pointer;padding:10px 12px;border-radius:8px;border:none;background:var(--accent);color:white;font-weight:600;box-shadow:0 6px 18px rgba(124,58,237,0.14);transition:transform .18s ease, box-shadow .18s}
+    button.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+    button:active{transform:translateY(1px)}
+
+    .big-number{font-size:34px;font-weight:700;margin:6px 0}
+    .progress{height:14px;background:rgba(255,255,255,0.04);border-radius:10px;overflow:hidden}
+    .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#06b6d4);width:0%;transition:width 750ms cubic-bezier(.2,.9,.25,1)}
+
+    .chart-wrap{height:220px;display:flex;align-items:center;justify-content:center}
+    .hint{font-size:13px;color:var(--muted)}
+
+    .footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;color:var(--muted);font-size:13px}
+
+    /* small responsive */
+    @media (max-width:900px){.grid{grid-template-columns:1fr;}.card{padding:14px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">AbhiS</div>
+      <div>
+        <h1>Attendance Calculator & Predictor — MLRITM</h1>
+        <p class="lead">Estimate required classes, visualize attendance, and predict eligibility for exams.<br>This is only educational purpose this was prepared as a project.<br>Prepared by Abhinav Sai Bitavaram CSE-C 2024-28</p>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div class="card" id="left">
+        <div style="height:12px"></div>
+
+        <div class="row">
+          <div>
+            <label>Classes Attended</label>
+            <input id="attended" type="number" min="0" value="60" />
+          </div>
+          <div>
+            <label>Classes Held</label>
+            <input id="held" type="number" min="1" value="80" />
+          </div>
+        </div>
+
+        <div style="height:10px"></div>
+
+        <label>Target Minimum % (Telangana Ranges often 75%)</label>
+        <input id="target" type="number" min="0" max="100" value="75" />
+
+        <div class="actions">
+          <button id="calcBtn">Calculate</button>
+          <button class="secondary" id="clearBtn">Clear</button>
+        </div>
+
+        <hr style="border:none;height:1px;background:rgba(255,255,255,0.02);margin:16px 0" />
+
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="hint">Current Attendance</div>
+              <div id="currentPct" class="big-number">--%</div>
+            </div>
+            <div style="width:48%">
+              <div class="progress"><i id="progressBar"></i></div>
+              <div style="height:8px"></div>
+              <div id="statusText" class="hint">Enter values and click Calculate</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:14px"></div>
+
+        <div>
+          <div class="hint">Predictor for Future Attendance</div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input id="plannedClasses" type="number" min="0" placeholder="enter no.of classes" style="width:160px" />
+            <button id="predictBtn">Run Predictor</button>
+          </div>
+          <div style="height:8px"></div>
+          <div id="prediction" class="hint">Predictor will show required outcome.</div>
+        </div>
+      </div>
+
+      <div class="card" id="right">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="hint">Attendance Summary</div>
+            <div class="hint" style="font-size:12px">Quick actions and allowed leaves</div>
+          </div>
+          <div class="hint">Eligibility rule: 75%</div>
+        </div>
+
+        <div class="chart-wrap">
+          <div style="text-align:center">
+            <div class="hint">You can afford (leave) :</div>
+            <div id="allowedLeaves" class="big-number">--</div>
+            <div style="height:8px"></div>
+            <div id="leaveHint" class="hint">Calculate to see how many classes you may miss and still meet target.</div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div class="hint">Last updated this project: <span id="lastUpdate">--</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // helpers
+    const el = id => document.getElementById(id);
+
+    function pct(att, held){
+      if (!held) return 0;
+      return (att/held)*100;
+    }
+
+    function updateUI(){
+      const a = Number(el('attended').value||0);
+      const h = Number(el('held').value||0);
+      const t = Number(el('target').value||75);
+      const current = Math.round(pct(a,h)*100)/100;
+      el('currentPct').textContent = isFinite(current)? current + '%' : '--%';
+      const bar = Math.min(100, Math.max(0, current));
+      el('progressBar').style.width = bar + '%';
+      const status = el('statusText');
+      if (!h){ status.textContent = 'Please enter classes held.'; return }
+      if (current >= t) { status.textContent = 'Good — eligible for exams'; status.style.color = getComputedStyle(document.documentElement).getPropertyValue('--good') }
+      else { status.textContent = 'Below target — take action to improve'; status.style.color = getComputedStyle(document.documentElement).getPropertyValue('--warn') }
+    }
+
+    el('calcBtn').addEventListener('click', ()=>{ updateUI(); updateAllowedLeaves(); el('lastUpdate').textContent = new Date().toLocaleString() });
+    el('clearBtn').addEventListener('click', ()=>{ el('attended').value=0; el('held').value=1; el('target').value=75; el('prediction').textContent='Predictor will show required outcome.'; updateUI(); updateAllowedLeaves(); });
+
+    // Predictor: given plannedClasses (extra classes student expects to attend), compute new %
+    el('predictBtn').addEventListener('click', ()=>{
+      const a = Number(el('attended').value||0);
+      const h = Number(el('held').value||0);
+      const planned = Number(el('plannedClasses').value||0);
+      const t = Number(el('target').value||75);
+      // consider planned classes will be added to both attended and held
+      const newAtt = a + planned;
+      const newHeld = h + planned;
+      const newPct = Math.round((newAtt/newHeld)*10000)/100;
+      let txt = `With ${planned} more classes you will have ${newPct}% attendance.`;
+      if (newPct >= t) txt += ' — You will meet the target!'; else {
+        // compute required additional classes x to reach target: (a + x)/(h + x) >= t/100
+        const required = Math.ceil(((t/100)*h - a) / (1 - t/100));
+        if (required <= 0) txt += ' — Already enough.'; else txt += `
+        You need ~${required} additional attended classes (beyond planned) to reach ${t}%.`;
+      }
+      el('prediction').textContent = txt;
+      updateUI();
+    });
+
+    function updateAllowedLeaves(){
+      const a = Number(el('attended').value||0);
+      const h = Number(el('held').value||0);
+      const t = Number(el('target').value||75);
+      if (!h){ el('allowedLeaves').textContent='--'; el('leaveHint').textContent='Enter classes held.'; return }
+      const targetFrac = t/100;
+      // If already below target, allowed leaves = 0 and show message
+      const currentPct = (h? (a/h) : 0);
+      if (currentPct < targetFrac){
+        el('allowedLeaves').textContent = '0';
+        const required = Math.ceil(((targetFrac)*h - a) / (1 - targetFrac));
+        el('leaveHint').textContent = `You are below target. Attend ~${required} classes to reach ${t}%.`;
+        return;
+      }
+      // max x such that a/(h + x) >= targetFrac  => x <= a/targetFrac - h
+      const maxX = Math.floor(Math.max(0, a/targetFrac - h));
+      el('allowedLeaves').textContent = String(maxX);
+      el('leaveHint').textContent = maxX>0? `You can miss up to ${maxX} more classes and still remain at or above ${t}%.` : `No more leaves recommended to keep ${t}%`;
+    }
+
+    // initialize
+    updateUI(); updateAllowedLeaves(); el('lastUpdate').textContent = new Date().toLocaleString();
+  </script>
+</body>
+</html>

@@ -103,6 +103,11 @@ const PROJECTS = [
     desc: "An automated health tracking application with dosage schedule storage and notification triggers.",
     stack: ["Scheduling", "Notifications", "Health tracking", "Prototype"],
     points: ["Stores dosage schedules per medicine", "Notification triggers remind users at dose time", "Built for Cyberthon 2K26 at CBIT"] },
+  { t: "Attendance Calculator & Predictor", sub: "Personal project", event: "Personal project", color: "#F97316",
+  live: "/projects/attendance/attendance.html",
+  desc: "A web tool I built after struggling to track my own attendance. It calculates the current percentage and predicts how many classes I can still miss while staying above the required limit.",
+  stack: ["HTML", "Web app"],
+  points: ["Built to solve a problem I faced as a student", "Calculates attendance percentage", "Predicts how many days can still be missed"] },
   { t: "Hospitality Sentiment Repair Agent", sub: "Prototype by Team ClearVision", team: "ClearVision",
   event: "HackWithAI, 24-hour offline hackathon at KLH University", color: "#F43F5E",
   logo: "/projects/clearvision/logo.png",
@@ -594,7 +599,7 @@ function Projects() {
   }, [sel]);
   return (
     <Section id="projects" title="Projects & hackathons" sub="Open a card for the deep dive.">
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
         {PROJECTS.map((p) => (
           <Tilt key={p.t} color={p.color} onClick={() => setSel(p)}>
             {p.logo
