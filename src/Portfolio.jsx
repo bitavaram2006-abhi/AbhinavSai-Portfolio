@@ -7,7 +7,7 @@ import {
   Menu, X, Mail, Phone, MapPin, Copy, Check, Send, ChevronDown, Award, Trophy,
   Smartphone, Globe, Cloud, Wrench, Sparkles, Briefcase, GraduationCap, Code2,
   ArrowRight, Layers, ShieldCheck, AlertCircle, Languages, FileText, ExternalLink, Download,
-  Sun, Moon
+  Sun, Moon, ChevronLeft, ChevronRight
 } from "lucide-react";
 
 /* ----------------------------- DATA ----------------------------- */
@@ -643,6 +643,184 @@ function ProjectDetails({ p, onClose }) {
   );
 }
 
+// Text shown in the top-right corner of the projects area. Change it to whatever you like.
+const MODE_TAG = { dark: "Night mode", light: "Light mode" };
+
+function useIsDark() {
+  const [dark, setDark] = useState(() => document.documentElement.dataset.theme !== "light");
+  useEffect(() => {
+    const el = document.documentElement;
+    const read = () => setDark(el.dataset.theme !== "light");
+    read();
+    const mo = new MutationObserver(read);
+    mo.observe(el, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => mo.disconnect();
+  }, []);
+  return dark;
+}
+
+function useNarrow(q = 640) {
+  const [narrow, setNarrow] = useState(() => window.innerWidth < q);
+  useEffect(() => {
+    const m = window.matchMedia(`(max-width: ${q}px)`);
+    const on = () => setNarrow(m.matches);
+    on();
+    m.addEventListener("change", on);
+    return () => m.removeEventListener("change", on);
+  }, [q]);
+  return narrow;
+}
+
+function ProjectCardBody({ p }) {
+  return (
+    <>
+      {p.logo
+        ? <img src={p.logo} alt={`${p.team} logo`} className="h-11 w-11 rounded-lg object-contain" />
+        : <Trophy style={{ color: p.color }} />}
+      <h3 className="mt-3 text-lg font-bold text-zinc-100">{p.t}</h3>
+      <p className="text-sm text-zinc-400">{p.sub}</p>
+      <p className="mt-2 text-sm" style={{ color: p.color }}>{p.event}</p>
+      <p className="mt-2 line-clamp-3 flex-1 text-sm text-zinc-300">{p.desc}</p>
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {p.stack.map((t) => <span key={t} className="rounded-md bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300">{t}</span>)}
+      </div>
+      <span className="mt-4 flex items-center gap-1 text-sm font-medium text-zinc-100">View details <ArrowRight size={16} /></span>
+    </>
+  );
+}
+
+/* ---------------------- NIGHT: roller with street lights ---------------------- */
+function Lamp({ delay }) {
+  const reduce = useReducedMotion();
+  return (
+    <div aria-hidden className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2" style={{ width: 280, height: 92 }}>
+      <div className="absolute bottom-0 left-1/2 w-1 -translate-x-1/2 rounded-full bg-zinc-600" style={{ height: 92 }} />
+      <motion.div className="absolute left-1/2 -translate-x-1/2"
+        style={{ top: 0, width: 280, height: 190, clipPath: "polygon(43% 0, 57% 0, 100% 100%, 0 100%)", background: "linear-gradient(to bottom, rgba(255,184,140,.42), transparent)" }}
+        animate={reduce ? {} : { opacity: [0.85, 1, 0.78, 1, 0.9] }} transition={{ duration: 4 + delay, repeat: Infinity }} />
+      <span className="absolute left-1/2 top-0 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
+        style={{ background: "#FFE6D3", boxShadow: "0 0 18px 8px rgba(255,170,120,.65)" }} />
+    </div>
+  );
+}
+
+function Face({ p, i, step, R, spring, active, onSelect, onOpen }) {
+  const o = useTransform(spring, (v) => Math.max(0, 1 - Math.abs(i * step + v) / 130));
+  return (
+    <div style={{ position: "absolute", inset: 0, transform: `rotateY(${i * step}deg) translateZ(${R}px)`, backfaceVisibility: "hidden" }}>
+      <motion.div style={{ opacity: o }} className="relative h-full w-full">
+        <button onClick={() => (active ? onOpen(p) : onSelect())} aria-label={active ? `Open ${p.t}` : `Show ${p.t}`}
+          className={`${glass} flex h-full w-full flex-col overflow-hidden rounded-2xl p-5 text-left`}
+          style={{ borderColor: p.color + "55" }}>
+          <ProjectCardBody p={p} />
+        </button>
+        <Lamp delay={i} />
+      </motion.div>
+    </div>
+  );
+}
+
+function Roller({ onOpen }) {
+  const narrow = useNarrow();
+  const n = PROJECTS.length;
+  const W = narrow ? 240 : 300;
+  const Ht = narrow ? 440 : 400;
+  const step = 48;
+  const R = Math.max(W * 1.05, W / 2 / Math.tan(((step / 2) * Math.PI) / 180));
+  const [idx, setIdx] = useState(0);
+  const rot = useMotionValue(0);
+  const spring = useSpring(rot, { stiffness: 90, damping: 20 });
+  const lane = useTransform(spring, (v) => `${v * -3}px 0px`);
+  useEffect(() => { rot.set(-idx * step); }, [idx]);
+  const go = (d) => setIdx((i) => Math.min(n - 1, Math.max(0, i + d)));
+  const arrow = "flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700 text-red-400 hover:border-red-500/60 disabled:opacity-30";
+
+  return (
+    <div className="overflow-hidden pb-4 pt-28 outline-none" tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "ArrowLeft") go(-1); if (e.key === "ArrowRight") go(1); }}>
+      <motion.div className="relative mx-auto" style={{ width: W, height: Ht, perspective: 1800, touchAction: "pan-y" }}
+        onPanEnd={(e, info) => { if (info.offset.x < -40) go(1); else if (info.offset.x > 40) go(-1); }}>
+        <motion.div className="relative h-full w-full" style={{ rotateY: spring, transformStyle: "preserve-3d" }}>
+          {PROJECTS.map((p, i) => (
+            <Face key={p.t} p={p} i={i} step={step} R={R} spring={spring}
+              active={i === idx} onSelect={() => setIdx(i)} onOpen={onOpen} />
+          ))}
+        </motion.div>
+      </motion.div>
+
+      <div className="relative mx-auto mt-10 h-4 max-w-3xl overflow-hidden rounded-full bg-zinc-900">
+        <motion.div className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2"
+          style={{ backgroundImage: "linear-gradient(90deg, rgba(255,184,140,.85) 50%, transparent 50%)", backgroundSize: "56px 100%", backgroundPosition: lane }} />
+      </div>
+
+      <div className="mt-6 flex items-center justify-center gap-4">
+        <button aria-label="Previous project" disabled={idx === 0} onClick={() => go(-1)} className={arrow}><ChevronLeft size={18} /></button>
+        <div className="flex gap-2">
+          {PROJECTS.map((p, i) => (
+            <button key={p.t} aria-label={`Show ${p.t}`} onClick={() => setIdx(i)}
+              className={`h-2 rounded-full transition-all ${i === idx ? "w-6 bg-red-500" : "w-2 bg-zinc-600"}`} />
+          ))}
+        </div>
+        <button aria-label="Next project" disabled={idx === n - 1} onClick={() => go(1)} className={arrow}><ChevronRight size={18} /></button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------- LIGHT: cable bridge ---------------------- */
+function Bridge({ onOpen }) {
+  const reduce = useReducedMotion();
+  const n = PROJECTS.length;
+  const H = 150, T = 12, S = 84;               // svg height, tower-top y, cable sag
+  const fx = (i) => (i + 0.5) / n;              // card centre as a fraction of the width
+  const cy = (x) => T + 4 * S * x * (1 - x);    // cable height at that fraction
+
+  return (
+    <div className="relative">
+      {["-left-2", "-right-2"].map((pos) => (
+        <div key={pos} aria-hidden className={`absolute bottom-0 top-0 hidden w-3 rounded-t-md bg-gradient-to-b from-red-500 to-red-600/40 md:block ${pos}`} />
+      ))}
+
+      <svg aria-hidden className="hidden w-full md:block" viewBox={`0 0 100 ${H}`} preserveAspectRatio="none" style={{ height: H }}>
+        <path d={`M 0 ${T} Q 50 ${T + 2 * S} 100 ${T}`} fill="none" strokeWidth="3" vectorEffect="non-scaling-stroke" style={{ stroke: "var(--color-red-500)" }} />
+        {PROJECTS.map((_, i) => (
+          <line key={i} x1={fx(i) * 100} y1={cy(fx(i))} x2={fx(i) * 100} y2={H} strokeWidth="1.5" vectorEffect="non-scaling-stroke" style={{ stroke: "var(--color-red-400)" }} />
+        ))}
+      </svg>
+
+      <div className="grid gap-y-6 md:auto-cols-fr md:grid-flow-col">
+        {PROJECTS.map((p, i) => (
+          <div key={p.t} className="md:px-3">
+            <div aria-hidden className="mx-auto h-8 w-px md:hidden" style={{ background: "var(--color-red-500)" }} />
+            <motion.div className="h-full" style={{ transformOrigin: "50% 0%" }}
+              animate={reduce ? {} : { rotate: [-0.7, 0.7, -0.7] }} transition={{ duration: 5 + i, repeat: Infinity, ease: "easeInOut" }}>
+              <button onClick={() => onOpen(p)} className={`${glass} flex h-full w-full flex-col rounded-2xl p-6 text-left transition-colors hover:border-red-500/60`}>
+                <ProjectCardBody p={p} />
+              </button>
+            </motion.div>
+          </div>
+        ))}
+      </div>
+
+      <div aria-hidden className="relative mt-4 h-3 overflow-hidden rounded-full bg-zinc-300">
+        <div className="absolute inset-x-0 top-1/2 h-px" style={{ backgroundImage: "repeating-linear-gradient(90deg, #FFF3EA 0 14px, transparent 14px 28px)" }} />
+      </div>
+    </div>
+  );
+}
+
+function Showcase({ onOpen }) {
+  const dark = useIsDark();
+  return (
+    <div className="relative pt-12">
+      <span className="absolute right-0 top-0 inline-flex items-center gap-1.5 rounded-full border border-red-500/40 px-3 py-1 text-xs font-medium text-red-400">
+        {dark ? <Moon size={13} /> : <Sun size={13} />} {dark ? MODE_TAG.dark : MODE_TAG.light}
+      </span>
+      {dark ? <Roller onOpen={onOpen} /> : <Bridge onOpen={onOpen} />}
+    </div>
+  );
+}
+
 function Projects() {
   const [sel, setSel] = useState(null);
   useEffect(() => {
@@ -653,23 +831,7 @@ function Projects() {
   }, [sel]);
   return (
     <Section id="projects" title="Projects & hackathons" sub="Open a card for the deep dive.">
-      <div className="grid gap-6 md:grid-cols-3">
-        {PROJECTS.map((p) => (
-          <Tilt key={p.t} color={p.color} onClick={() => setSel(p)}>
-            {p.logo
-              ? <img src={p.logo} alt={`${p.team} logo`} className="h-12 w-12 rounded-lg object-contain" />
-              : <Trophy style={{ color: p.color }} />}
-            <h3 className="mt-4 text-xl font-bold text-zinc-100">{p.t}</h3>
-            <p className="text-sm text-zinc-400">{p.sub}</p>
-            <p className="mt-2 text-sm" style={{ color: p.color }}>{p.event}</p>
-            <p className="mt-3 flex-1 text-sm text-zinc-300">{p.desc}</p>
-            <div className="mt-4 flex flex-wrap gap-1.5">
-              {p.stack.map((t) => <span key={t} className="rounded-md bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300">{t}</span>)}
-            </div>
-            <span className="mt-5 flex items-center gap-1 text-sm font-medium text-zinc-100">View details <ArrowRight size={16} /></span>
-          </Tilt>
-        ))}
-      </div>
+      <Showcase onOpen={setSel} />
       <AnimatePresence>
         {sel && (
           <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 p-5 backdrop-blur-sm"
