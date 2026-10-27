@@ -130,9 +130,13 @@ const CERTS = [
   ] },
   { t: "HackerRank Java (Basic)", d: "Skill certification", icon: Code2, file: "/certs/hackerrank-java.png" },
   { t: "MongoDB Administration", d: "TechA, Infosys Springboard", icon: ShieldCheck, file: "/certs/mongodb-infosys.pdf" },
-  { t: "C++ & C", d: "C++ 100% Genius Grade, C 88% Grade A (Sanfoundry)", icon: Award },
-  { t: "EF SET C1 Advanced English", d: "Score 68/100", icon: Languages },
-  { t: "MoE Innovation Ambassador", d: "Foundation, Reskilling & Advanced", icon: Sparkles },
+  { t: "C++ & C", d: "C++ 100% Genius Grade, C 88% Grade A (Sanfoundry)", icon: Award,
+  files: [
+    { label: "C Certificate", file: "/certs/c-sand.pdf" },
+    { label: "C++ Certificate", file: "/certs/c-plus-sand.pdf" },
+  ] },
+  { t: "EF SET C1 Advanced English", d: "Score 68/100", icon: Languages, file: "/certs/ef-set-c1.pdf" },
+  { t: "MoE Innovation Ambassador", d: "Foundation, Reskilling & Advanced", icon: Sparkles, file: "/certs/job-ready.pdf" },
 ];
 
 /* ----------------------------- HELPERS ----------------------------- */
