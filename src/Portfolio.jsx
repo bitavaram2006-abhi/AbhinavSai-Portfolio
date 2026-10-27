@@ -6,7 +6,8 @@ import {
 import {
   Menu, X, Mail, Phone, MapPin, Copy, Check, Send, ChevronDown, Award, Trophy,
   Smartphone, Globe, Cloud, Wrench, Sparkles, Briefcase, GraduationCap, Code2,
-  ArrowRight, Layers, ShieldCheck, AlertCircle, Languages, FileText, ExternalLink, Download
+  ArrowRight, Layers, ShieldCheck, AlertCircle, Languages, FileText, ExternalLink, Download,
+  Sun, Moon
 } from "lucide-react";
 
 /* ----------------------------- DATA ----------------------------- */
@@ -74,7 +75,7 @@ const SKILLS = [
   ...s("cloud", [["AWS Cloud Foundations", "AWS Academy"], ["AWS Machine Learning Foundations", "AWS Academy"], ["MongoDB Administration", "TechA, Infosys Certified"], ["MySQL"], ["SQLite"]]),
   ...s("tools", [["Git"], ["GitHub"], ["Microsoft Power BI"], ["Unity Engine"], ["Figma"], ["Visual Studio Code"]]),
 ];
-const CAT_COLOR = { mobile: "#EF4444", web: "#F43F5E", cloud: "#F97316", tools: "#A1A1AA" };
+const CAT_COLOR = { mobile: "#E8743B", web: "#F08A5D", cloud: "#D9622B", tools: "#A1A1AA" };
 
 const EXP = [
   { role: "Python Full Stack Development Intern", org: "AICTE – EduSkills", when: "Aug–Oct 2026 & Jan–Mar 2026", badge: "Grade-O",
@@ -98,18 +99,18 @@ const EXP = [
 
 // Edit the `stack` tags and `points` to match what you actually built.
 const PROJECTS = [
-  { t: "Re-Medic", sub: "Automated Medicine Reminder System", event: "Cyberthon 2K26 (CBIT)", color: "#EF4444",
+  { t: "Re-Medic", sub: "Automated Medicine Reminder System", event: "Cyberthon 2K26 (CBIT)", color: "#E8743B",
     live: "https://re-medic.vercel.app/",
     desc: "An automated health tracking application with dosage schedule storage and notification triggers.",
     stack: ["Scheduling", "Notifications", "Health tracking", "Prototype"],
     points: ["Stores dosage schedules per medicine", "Notification triggers remind users at dose time", "Built for Cyberthon 2K26 at CBIT"] },
-  { t: "Attendance Calculator & Predictor", sub: "Personal project", event: "Personal project", color: "#F97316",
+  { t: "Attendance Calculator & Predictor", sub: "Personal project", event: "Personal project", color: "#D9622B",
   live: "/projects/attendance/attendance.html",
   desc: "A web tool I built after struggling to track my own attendance. It calculates the current percentage and predicts how many classes I can still miss while staying above the required limit.",
   stack: ["HTML", "Web app"],
   points: ["Built to solve a problem I faced as a student", "Calculates attendance percentage", "Predicts how many days can still be missed"] },
   { t: "Hospitality Sentiment Repair Agent", sub: "Prototype by Team ClearVision", team: "ClearVision",
-  event: "HackWithAI, 24-hour offline hackathon at KLH University", color: "#F43F5E",
+  event: "HackWithAI, 24-hour offline hackathon at KLH University", color: "#F08A5D",
   logo: "/projects/clearvision/logo.png",
   desc: "A prototype AI agent built to repair guest sentiment in the hospitality industry.",
   stack: ["Prototype", "AI agent", "Sentiment analysis"],
@@ -175,6 +176,35 @@ function useCopy() {
 }
 
 /* ----------------------------- NAVBAR ----------------------------- */
+function useTheme() {
+  const [theme, setTheme] = useState(() => {
+    try { return localStorage.getItem("theme") || "dark"; } catch { return "dark"; }
+  });
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try { localStorage.setItem("theme", theme); } catch {}
+  }, [theme]);
+  return [theme, setTheme];
+}
+
+function ThemeToggle() {
+  const [theme, setTheme] = useTheme();
+  const dark = theme === "dark";
+  return (
+    <button onClick={() => setTheme(dark ? "light" : "dark")}
+      aria-label={dark ? "Switch to light mode" : "Switch to night mode"}
+      className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-700 text-red-400 hover:border-red-500/60">
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span key={dark ? "moon" : "sun"} className="flex"
+          initial={{ rotate: -90, scale: 0, opacity: 0 }} animate={{ rotate: 0, scale: 1, opacity: 1 }}
+          exit={{ rotate: 90, scale: 0, opacity: 0 }} transition={{ duration: 0.25 }}>
+          {dark ? <Moon size={18} /> : <Sun size={18} />}
+        </motion.span>
+      </AnimatePresence>
+    </button>
+  );
+}
+
 function Navbar() {
   const active = useActive(NAV);
   const [open, setOpen] = useState(false);
@@ -200,9 +230,12 @@ function Navbar() {
             </li>
           ))}
         </ul>
-        <button aria-label="Toggle menu" className="text-zinc-200 md:hidden" onClick={() => setOpen(!open)}>
-          {open ? <X /> : <Menu />}
-        </button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+            <button aria-label="Toggle menu" className="text-zinc-200 md:hidden" onClick={() => setOpen(!open)}>
+              {open ? <X /> : <Menu />}
+            </button>
+        </div>
       </nav>
       <AnimatePresence>
         {open && (
@@ -267,12 +300,12 @@ function Hero() {
   const reduce = useReducedMotion();
   const dots = useMemo(() => Array.from({ length: 12 }, (_, i) => ({
     x: (i * 37) % 100, y: (i * 53) % 100, size: 2 + (i % 4), dur: 6 + (i % 7),
-    c: ["#EF4444", "#F97316", "#F43F5E"][i % 3],
+    c: ["#E8743B", "#D9622B", "#F08A5D"][i % 3],
   })), []);
   return (
     <section id="home" className="relative flex min-h-screen items-center overflow-hidden pt-16">
       <div aria-hidden className="absolute inset-0">
-        {[["-top-20 -left-20", "#EF4444", 0], ["top-1/3 -right-24", "#F43F5E", 2], ["-bottom-24 left-1/3", "#F97316", 4]].map(([pos, c, d], i) => (
+        {[["-top-20 -left-20", "#E8743B", 0], ["top-1/3 -right-24", "#F08A5D", 2], ["-bottom-24 left-1/3", "#D9622B", 4]].map(([pos, c, d], i) => (
           <motion.div key={i} className={`absolute h-96 w-96 rounded-full ${pos}`} style={{ background: `radial-gradient(circle, ${c}, transparent 70%)`, opacity: 0.5 }}
             animate={reduce ? {} : { scale: [1, 1.25, 1], x: [0, 30, 0] }} transition={{ duration: 10, repeat: Infinity, delay: d }} />
         ))}
@@ -292,7 +325,7 @@ function Hero() {
             ))}
           </div>
           <h1 className="text-5xl font-extrabold leading-tight sm:text-6xl">
-            <motion.span className="bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(90deg,#E4E4E7,#EF4444,#F97316,#E4E4E7)", backgroundSize: "300% 100%" }}
+            <motion.span className="bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(90deg,var(--name-a),var(--name-b),var(--name-c),var(--name-a))", backgroundSize: "300% 100%" }}
               animate={reduce ? {} : { backgroundPosition: ["0% 0%", "300% 0%"] }} transition={{ duration: 8, repeat: Infinity, ease: "linear" }}>
               <HeroName />
             </motion.span>
@@ -302,8 +335,8 @@ function Hero() {
             Engineered for Innovation: Android Software Development, Full-Stack Python/Django Systems, AI Architectures & Cloud Engineering.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <motion.button whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(239,68,68,.55)" }} whileTap={{ scale: 0.97 }} onClick={() => go("projects")}
-              className="flex items-center gap-2 rounded-xl bg-red-600 px-6 py-3 font-semibold text-white">
+            <motion.button whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(232,116,59,.55)" }} whileTap={{ scale: 0.97 }} onClick={() => go("projects")}
+              className="flex items-center gap-2 rounded-xl bg-red-600 text-black! px-6 py-3 font-semibold text-white">
               View projects <ArrowRight size={18} />
             </motion.button>
             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={() => go("contact")}
@@ -337,10 +370,10 @@ function Avatar() {
   return (
     <motion.div initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4, duration: 0.7 }} className="relative mx-auto shrink-0 lg:mx-0">
       <motion.div animate={reduce ? {} : { y: [0, -10, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} className="relative h-56 w-56 sm:h-72 sm:w-72">
-        <div aria-hidden className="absolute -inset-6 rounded-full" style={{ background: "radial-gradient(circle, rgba(220,38,38,.45), transparent 70%)" }} />
-        <motion.div aria-hidden className="absolute -inset-1 rounded-full" style={{ background: "conic-gradient(from 0deg, #EF4444, #09090b, #F97316, #09090b, #EF4444)" }}
+        <div aria-hidden className="absolute -inset-6 rounded-full" style={{ background: "radial-gradient(circle, rgba(232,116,59,.45), transparent 70%)" }} />
+        <motion.div aria-hidden className="absolute -inset-1 rounded-full" style={{ background: "conic-gradient(from 0deg, #E8743B, #09090b, #D9622B, #09090b, #E8743B)" }}
           animate={reduce ? {} : { rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} />
-        <img src={PROFILE_IMG || PLACEHOLDER} alt="B. Abhinav Sai" className="relative h-full w-full rounded-full border-4 object-cover" style={{ borderColor: "#060607" }} />
+        <img src={PROFILE_IMG || PLACEHOLDER} alt="B. Abhinav Sai" className="relative h-full w-full rounded-full border-4 object-cover" style={{ borderColor: "var(--bg)" }} />
       </motion.div>
     </motion.div>
   );
@@ -349,9 +382,9 @@ function Avatar() {
 /* ----------------------------- ABOUT ----------------------------- */
 function About() {
   const items = [
-    { icon: GraduationCap, t: "B.Tech Computer Science & Engineering", d: "MLRITM, third year, expected 2028", c: "#EF4444" },
-    { icon: Languages, t: "C1 Advanced English", d: "EF SET, score 68/100", c: "#F97316" },
-    { icon: Briefcase, t: "113 hours of employability skills", d: "JobReady, Wadhwani Foundation", c: "#F43F5E" },
+    { icon: GraduationCap, t: "B.Tech Computer Science & Engineering", d: "MLRITM, third year, expected 2028", c: "#E8743B" },
+    { icon: Languages, t: "C1 Advanced English", d: "EF SET, score 68/100", c: "#D9622B" },
+    { icon: Briefcase, t: "113 hours of employability skills", d: "JobReady, Wadhwani Foundation", c: "#F08A5D" },
   ];
   return (
     <Section id="about" title="About me">
@@ -431,7 +464,7 @@ function DocViewer({ doc, onClose }) {
         </div>
         <div className="min-h-0 flex-1 overflow-auto p-2">
           {isPdf
-            ? <iframe src={doc.file} title={doc.label} className="h-full w-full rounded-lg bg-white" />
+            ? <iframe src={doc.file} title={doc.label} className="h-full w-full rounded-lg bg-[#ffffff]" />
             : <img src={doc.file} alt={doc.label} className="mx-auto max-h-full max-w-full object-contain" />}
         </div>
       </motion.div>
@@ -450,7 +483,7 @@ function Experience() {
           return (
             <motion.div key={e.role} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} className="relative mb-6">
               <motion.span initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }} transition={{ type: "spring", delay: 0.15 }}
-                style={{ left: -41, boxShadow: "0 0 16px #F97316" }} className="absolute top-6 h-4 w-4 rounded-full bg-orange-500" />
+                style={{ left: -41, boxShadow: "0 0 16px #D9622B" }} className="absolute top-6 h-4 w-4 rounded-full bg-orange-500" />
               <div className={`${glass} rounded-2xl transition-colors hover:border-red-500/50`}>
                 <button onClick={() => setOpen(isOpen ? -1 : i)} aria-expanded={isOpen} className="w-full p-5 text-left">
                   <div className="flex items-start justify-between gap-3">
@@ -459,7 +492,7 @@ function Experience() {
                       <p className="text-sm text-zinc-400">{e.org} · {e.when}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span style={{ background: "rgba(249,115,22,.15)", boxShadow: "0 0 14px rgba(249,115,22,.35)" }} className="rounded-full px-2.5 py-1 text-xs text-orange-300">
+                      <span style={{ background: "rgba(217,98,43,.15)", boxShadow: "0 0 14px rgba(217,98,43,.35)" }} className="rounded-full px-2.5 py-1 text-xs text-orange-300">
                         <Trophy size={12} className="mr-1 inline" />{e.badge}
                       </span>
                       <motion.span animate={{ rotate: isOpen ? 180 : 0 }}><ChevronDown size={18} className="text-zinc-400" /></motion.span>
@@ -490,7 +523,7 @@ function Experience() {
                         )}
                         {e.work && (
                           <a href={e.work.href} target="_blank" rel="noopener noreferrer"
-                            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500">
+                            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-red-600 text-black! px-4 py-2 text-sm font-semibold text-white hover:bg-red-500">
                             {e.work.label} <ExternalLink size={15} />
                           </a>
                         )}
@@ -552,7 +585,7 @@ function ProjectDetails({ p, onClose }) {
 
       {p.live && (
         <a href={p.live} target="_blank" rel="noopener noreferrer"
-          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-500">
+          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-red-600 text-black! px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-500">
           Open live app <ExternalLink size={15} />
         </a>
       )}
@@ -570,7 +603,7 @@ function ProjectDetails({ p, onClose }) {
         <div className="mt-6">
           <p className="mb-2 text-sm font-semibold text-zinc-200">Prototype</p>
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => setPreview(!preview)} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500">
+            <button onClick={() => setPreview(!preview)} className="rounded-lg bg-red-600 text-black! px-4 py-2 text-sm font-semibold text-white hover:bg-red-500">
               {preview ? "Hide live preview" : "Show live preview"}
             </button>
             <a href={p.prototype} target="_blank" rel="noopener noreferrer"
@@ -578,7 +611,7 @@ function ProjectDetails({ p, onClose }) {
               Open in new tab <ExternalLink size={15} />
             </a>
           </div>
-          {preview && <iframe src={p.prototype} title={`${p.t} prototype`} className="mt-3 w-full rounded-xl border border-zinc-800 bg-white" style={{ height: 480 }} />}
+          {preview && <iframe src={p.prototype} title={`${p.t} prototype`} className="mt-3 w-full rounded-xl border border-zinc-800 bg-[#ffffff]" style={{ height: 480 }} />}
         </div>
       )}
 
@@ -643,7 +676,7 @@ function Cert({ c }) {
   return (
     <motion.div onMouseMove={move} whileHover={{ y: -4 }} className={`${glass} group relative overflow-hidden rounded-2xl p-5`}>
       <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{ background: "radial-gradient(220px circle at var(--x) var(--y), rgba(239,68,68,.28), transparent 70%)" }} />
+        style={{ background: "radial-gradient(220px circle at var(--x) var(--y), rgba(232,116,59,.28), transparent 70%)" }} />
       <c.icon className="relative text-orange-400" />
       <h3 className="relative mt-3 font-semibold text-zinc-100">{c.t}</h3>
       <p className="relative mt-1 text-sm text-zinc-400">{c.d}</p>
@@ -695,16 +728,16 @@ if (!res.ok) { setStatus("idle"); return; }
         <div className="relative">
           {props.rows ? (
             <textarea id={k} {...props} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} onBlur={() => setTouched({ ...touched, [k]: true })}
-              className={`w-full rounded-xl border bg-zinc-950/60 px-4 py-3 text-zinc-100 outline-none transition-colors ${bad ? "border-red-500" : good ? "border-emerald-500" : "border-zinc-800 focus:border-zinc-500"}`} />
+              className={`w-full rounded-xl border bg-zinc-950/60 px-4 py-3 text-zinc-100 outline-none transition-colors ${bad ? "border-[#ef4444]" : good ? "border-emerald-500" : "border-zinc-800 focus:border-zinc-500"}`} />
           ) : (
             <input id={k} {...props} value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} onBlur={() => setTouched({ ...touched, [k]: true })}
-              className={`w-full rounded-xl border bg-zinc-950/60 px-4 py-3 pr-10 text-zinc-100 outline-none transition-colors ${bad ? "border-red-500" : good ? "border-emerald-500" : "border-zinc-800 focus:border-zinc-500"}`} />
+              className={`w-full rounded-xl border bg-zinc-950/60 px-4 py-3 pr-10 text-zinc-100 outline-none transition-colors ${bad ? "border-[#ef4444]" : good ? "border-emerald-500" : "border-zinc-800 focus:border-zinc-500"}`} />
           )}
           {!props.rows && good && <Check size={18} className="absolute right-3 top-3.5 text-emerald-400" />}
-          {!props.rows && bad && <AlertCircle size={18} className="absolute right-3 top-3.5 text-red-400" />}
+          {!props.rows && bad && <AlertCircle size={18} className="absolute right-3 top-3.5 text-[#ef4444]" />}
         </div>
         <AnimatePresence>
-          {bad && <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-1 text-xs text-red-400">{err[k]}</motion.p>}
+          {bad && <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-1 text-xs text-[#ef4444]">{err[k]}</motion.p>}
         </AnimatePresence>
       </div>
     );
@@ -743,7 +776,7 @@ if (!res.ok) { setStatus("idle"); return; }
           {field("email", "Email", { type: "email", autoComplete: "email" })}
           {field("message", "Message", { rows: 4 })}
           <motion.button type="submit" disabled={status === "sending"} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-500 to-rose-500 px-6 py-3 font-semibold text-white disabled:opacity-60">
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-500 to-rose-500 text-black! px-6 py-3 font-semibold text-white disabled:opacity-60">
             {status === "sending" ? "Sending…" : "Send message"} <Send size={16} />
           </motion.button>
           <AnimatePresence>
@@ -765,19 +798,19 @@ if (!res.ok) { setStatus("idle"); return; }
 function Blooms() {
   const reduce = useReducedMotion();
   const b = [
-    { pos: "-top-40 left-1/4", c: "rgba(185,28,28,.38)", s: 640, d: 0 },
-    { pos: "top-1/2 -right-40", c: "rgba(225,29,72,.26)", s: 560, d: 3 },
-    { pos: "-bottom-48 -left-32", c: "rgba(239,68,68,.22)", s: 600, d: 6 },
+    { pos: "-top-40 left-1/4", c: "var(--bloom-1)", s: 640, d: 0 },
+    { pos: "top-1/2 -right-40", c: "var(--bloom-2)", s: 560, d: 3 },
+    { pos: "-bottom-48 -left-32", c: "var(--bloom-3)", s: 600, d: 6 },
   ];
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-      <div className="absolute inset-0" style={{ backgroundImage: "repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 1px, transparent 1px 4px)" }} />
+      <div className="absolute inset-0" style={{ backgroundImage: "repeating-linear-gradient(90deg, var(--lines) 0 1px, transparent 1px 4px)" }} />
       {b.map((x, i) => (
         <motion.div key={i} className={`absolute rounded-full ${x.pos}`}
           style={{ width: x.s, height: x.s, background: `radial-gradient(circle, ${x.c}, transparent 65%)` }}
           animate={reduce ? {} : { opacity: [0.5, 1, 0.5]}} transition={{ duration: 9, repeat: Infinity, delay: x.d }} />
       ))}
-      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.75))" }} />
+      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at center, transparent 40%, var(--vignette))" }} />
     </div>
   );
 }
@@ -786,12 +819,12 @@ function Blooms() {
 export default function Portfolio() {
   useEffect(() => {
     const prev = [document.documentElement.style.background, document.body.style.background];
-    document.documentElement.style.background = document.body.style.background = "#060607";
+    document.documentElement.style.background = document.body.style.background = "var(--bg)";
     document.documentElement.style.colorScheme = "dark";
     return () => { [document.documentElement.style.background, document.body.style.background] = prev; };
   }, []);
   return (
-    <div style={{ background: "#060607", color: "#e4e4e7" }} className="relative min-h-screen scroll-smooth font-sans antialiased">
+    <div style={{ background: "var(--bg)", color: "var(--fg)" }} className="relative min-h-screen scroll-smooth font-sans antialiased">
       <Blooms />
       <Navbar />
       <main className="relative z-10">
