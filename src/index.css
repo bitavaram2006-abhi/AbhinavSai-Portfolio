@@ -60,4 +60,4 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
   --color-orange-500: #F0803F;
   --color-rose-500: #F07C5B;
   --color-emerald-400: #0E8A5F;
-}
+}:focus-visible { outline: 2px solid var(--color-red-500); outline-offset: 3px; }

@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import {
   motion, AnimatePresence, useScroll, useSpring, useInView, animate,
-  useMotionValue, useTransform, useReducedMotion,
+  useMotionValue, useTransform, useReducedMotion, useMotionValueEvent,
 } from "framer-motion";
 import {
   Menu, X, Mail, Phone, MapPin, Copy, Check, Send, ChevronDown, Award, Trophy,
   Smartphone, Globe, Cloud, Wrench, Sparkles, Briefcase, GraduationCap, Code2,
   ArrowRight, Layers, ShieldCheck, AlertCircle, Languages, FileText, ExternalLink, Download,
-  Sun, Moon, ChevronLeft, ChevronRight
+  Sun, Moon, ChevronLeft, ChevronRight, ArrowUp
 } from "lucide-react";
 
 /* ----------------------------- DATA ----------------------------- */
@@ -213,14 +213,73 @@ function ThemeToggle() {
   );
 }
 
+function CursorGlow() {
+  const reduce = useReducedMotion();
+  const x = useMotionValue(-500), y = useMotionValue(-500);
+  const sx = useSpring(x, { stiffness: 110, damping: 22 });
+  const sy = useSpring(y, { stiffness: 110, damping: 22 });
+  useEffect(() => {
+    if (reduce || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    const m = (e) => { x.set(e.clientX - 220); y.set(e.clientY - 220); };
+    window.addEventListener("pointermove", m);
+    return () => window.removeEventListener("pointermove", m);
+  }, [reduce]);
+  if (reduce) return null;
+  return (
+    <motion.div aria-hidden className="pointer-events-none fixed left-0 top-0 z-0 rounded-full"
+      style={{ x: sx, y: sy, width: 440, height: 440, background: "radial-gradient(circle, var(--bloom-2), transparent 65%)" }} />
+  );
+}
+
+function Magnetic({ children }) {
+  const ref = useRef(null);
+  const x = useMotionValue(0), y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 220, damping: 14 });
+  const sy = useSpring(y, { stiffness: 220, damping: 14 });
+  const move = (e) => {
+    if (e.pointerType !== "mouse" || !ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    x.set((e.clientX - (r.left + r.width / 2)) * 0.25);
+    y.set((e.clientY - (r.top + r.height / 2)) * 0.25);
+  };
+  return (
+    <motion.div ref={ref} onPointerMove={move} onPointerLeave={() => { x.set(0); y.set(0); }}
+      style={{ x: sx, y: sy }} className="inline-block">
+      {children}
+    </motion.div>
+  );
+}
+
+function BackToTop() {
+  const { scrollY } = useScroll();
+  const [show, setShow] = useState(false);
+  useMotionValueEvent(scrollY, "change", (v) => setShow(v > 600));
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.button aria-label="Back to top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          initial={{ opacity: 0, y: 20, scale: 0.8 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.8 }}
+          whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.92 }}
+          className="fixed bottom-5 right-5 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-red-600 text-black!"
+          style={{ boxShadow: "0 0 24px rgba(232,116,59,.5)" }}>
+          <ArrowUp size={20} />
+        </motion.button>
+      )}
+    </AnimatePresence>
+  );
+}
+
 function Navbar() {
   const active = useActive(NAV);
   const [open, setOpen] = useState(false);
-  const { scrollYProgress } = useScroll();
+  const { scrollYProgress, scrollY } = useScroll();
+  const [hidden, setHidden] = useState(false);
+  useMotionValueEvent(scrollY, "change", (y) => setHidden(y > scrollY.getPrevious() && y > 120 && !open));
   const bar = useSpring(scrollYProgress, { stiffness: 120, damping: 25 });
   const jump = (id) => { setOpen(false); go(id); };
   return (
-    <header className={`fixed inset-x-0 top-0 z-40 ${glass} border-x-0 border-t-0`}>
+    <motion.header animate={{ y: hidden ? "-100%" : 0 }} transition={{ duration: 0.3, ease: "easeInOut" }}
+      className={`fixed inset-x-0 top-0 z-40 ${glass} border-x-0 border-t-0`}>
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
         <button onClick={() => jump("home")} className="font-bold text-zinc-100">
           Abhinav<span className="text-red-500">.dev</span>
@@ -258,7 +317,7 @@ function Navbar() {
         )}
       </AnimatePresence>
       <motion.div style={{ scaleX: bar }} className="h-0.5 origin-left bg-gradient-to-r from-red-500 via-rose-500 to-orange-500" />
-    </header>
+    </motion.header>
   );
 }
 
@@ -343,14 +402,18 @@ function Hero() {
             Engineered for Innovation: Android Software Development, Full-Stack Python/Django Systems, AI Architectures & Cloud Engineering.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <motion.button whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(232,116,59,.55)" }} whileTap={{ scale: 0.97 }} onClick={() => go("projects")}
+            <Magnetic>
+              <motion.button whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(232,116,59,.55)" }} whileTap={{ scale: 0.97 }} onClick={() => go("projects")}
               className="flex items-center gap-2 rounded-xl bg-red-600 text-black! px-6 py-3 font-semibold text-white">
               View projects <ArrowRight size={18} />
-            </motion.button>
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={() => go("contact")}
-              className={`${glass} rounded-xl px-6 py-3 font-semibold text-zinc-100 hover:border-orange-500/60`}>
-              Contact me
-            </motion.button>
+              </motion.button>
+            </Magnetic>
+            <Magnetic>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={() => go("contact")}
+                className={`${glass} rounded-xl px-6 py-3 font-semibold text-zinc-100 hover:border-orange-500/60`}>
+                Contact me
+              </motion.button>
+            </Magnetic>
             <SocialButtons /> 
           </div>
         </motion.div>
@@ -435,7 +498,7 @@ function Skills() {
         <AnimatePresence mode="popLayout">
           {list.map((k) => (
             <motion.div layout key={k.n} initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.85 }}
-              whileHover={{ scale: 1.06, borderColor: CAT_COLOR[k.cat] }} className={`${glass} rounded-xl p-4`}>
+              whileHover={{ scale: 1.06, borderColor: CAT_COLOR[k.cat] }} whileTap={{ scale: 0.96 }} className={`${glass} rounded-xl p-4`}>
               <span className="mb-2 block h-1.5 w-6 rounded-full" style={{ background: CAT_COLOR[k.cat] }} />
               <div className="font-medium text-zinc-100">{k.n}</div>
               {k.note && <div className="mt-1 text-xs text-zinc-400">{k.note}</div>}
@@ -704,64 +767,122 @@ function Lamp({ delay }) {
   );
 }
 
-function Face({ p, i, step, R, spring, active, onSelect, onOpen }) {
-  const o = useTransform(spring, (v) => Math.max(0, 1 - Math.abs(i * step + v) / 130));
+function OrbitCard({ p, i, n, rot, Rx, W, Ht, onClick }) {
+  const a = useTransform(rot, (v) => ((i * 360) / n + v) * (Math.PI / 180));
+  const x = useTransform(a, (t) => Math.sin(t) * Rx);
+  const depth = useTransform(a, (t) => (Math.cos(t) + 1) / 2); // 0 = far side, 1 = front
+  const scale = useTransform(depth, (d) => 0.6 + 0.4 * d);
+  const y = useTransform(depth, (d) => (1 - d) * -36);
+  const opacity = useTransform(depth, (d) => 0.25 + 0.75 * d);
+  const zIndex = useTransform(depth, (d) => Math.round(d * 100));
+  const lamp = useTransform(depth, (d) => d ** 8);
   return (
-    <div style={{ position: "absolute", inset: 0, transform: `rotateY(${i * step}deg) translateZ(${R}px)`, backfaceVisibility: "hidden" }}>
-      <motion.div style={{ opacity: o }} className="relative h-full w-full">
-        <button onClick={() => (active ? onOpen(p) : onSelect())} aria-label={active ? `Open ${p.t}` : `Show ${p.t}`}
-          className={`${glass} flex h-full w-full flex-col overflow-hidden rounded-2xl p-5 text-left`}
-          style={{ borderColor: p.color + "55" }}>
-          <ProjectCardBody p={p} />
-        </button>
-        <Lamp delay={i} />
-      </motion.div>
-    </div>
+    <motion.div style={{ position: "absolute", left: "50%", top: 0, width: W, height: Ht, marginLeft: -W / 2, x, y, scale, opacity, zIndex }}>
+      <button onClick={onClick} aria-label={`Show ${p.t}`}
+        className={`${glass} flex h-full w-full flex-col overflow-hidden rounded-2xl p-5 text-left`}
+        style={{ borderColor: p.color + "55", background: "var(--color-zinc-950)" }}>
+        <ProjectCardBody p={p} />
+      </button>
+      <motion.div aria-hidden style={{ opacity: lamp }} className="pointer-events-none"><Lamp delay={i} /></motion.div>
+    </motion.div>
   );
 }
 
 function Roller({ onOpen }) {
-  const narrow = useNarrow();
+  const reduce = useReducedMotion();
+  const narrow = useNarrow(640);
+  const mid = useNarrow(1024);
   const n = PROJECTS.length;
   const W = narrow ? 240 : 300;
-  const Ht = narrow ? 440 : 400;
-  const step = 48;
-  const R = Math.max(W * 1.05, W / 2 / Math.tan(((step / 2) * Math.PI) / 180));
-  const [idx, setIdx] = useState(0);
+  const Ht = narrow ? 420 : 380;
+  const Rx = narrow ? 110 : mid ? 230 : 330;   // width of the circle
+  const step = 360 / n;
+
+  const INTRO_SPEED = 520;   // degrees per second at the start (fast)
+  const BASE_SPEED = 8;      // degrees per second afterwards (slow)
+  const EASE = 1.2;          // bigger = settles into slow faster
+
+  const ref = useRef(null);
+  const inView = useInView(ref, { margin: "-60px" });
   const rot = useMotionValue(0);
-  const spring = useSpring(rot, { stiffness: 90, damping: 20 });
-  const lane = useTransform(spring, (v) => `${v * -3}px 0px`);
-  useEffect(() => { rot.set(-idx * step); }, [idx]);
-  const go = (d) => setIdx((i) => Math.min(n - 1, Math.max(0, i + d)));
-  const arrow = "flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700 text-red-400 hover:border-red-500/60 disabled:opacity-30";
+  const ctl = useRef({ v: INTRO_SPEED, hover: false, busy: false });
+  const anim = useRef(null);
+  const [cur, setCur] = useState(0);
+
+  // endless rotation: starts fast, eases down to slow, pauses on hover
+  useEffect(() => {
+    if (reduce || !inView || n < 2) return;
+    let raf, last = performance.now();
+    const tick = (now) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      const c = ctl.current;
+      if (!c.busy) {
+        const target = c.hover ? 0 : BASE_SPEED;
+        c.v += (target - c.v) * (1 - Math.exp(-dt * EASE));
+        rot.set(rot.get() + c.v * dt);
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [inView, reduce, n]);
+
+  useMotionValueEvent(rot, "change", (v) => {
+    const i = ((Math.round(-v / step) % n) + n) % n;
+    setCur((p) => (p === i ? p : i));
+  });
+
+  const focus = (i) => {
+    const c = ctl.current;
+    c.busy = true; c.v = 0;
+    const want = -i * step;
+    const k = Math.round((rot.get() - want) / 360);
+    anim.current?.stop();
+    anim.current = animate(rot, want + k * 360, { duration: 0.9, ease: "easeInOut", onComplete: () => { c.busy = false; } });
+  };
+
+  const click = (i) => {
+    const a = ((((i * 360) / n + rot.get()) % 360) + 360) % 360;
+    if (a < 25 || a > 335) onOpen(PROJECTS[i]); else focus(i);
+  };
+
+  const dash = useTransform(rot, (v) => `${-v * 1.4}px`);
+  const arrow = "flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700 text-red-400 hover:border-red-500/60";
 
   return (
-    <div className="overflow-hidden pb-4 pt-28 outline-none" tabIndex={0}
-      onKeyDown={(e) => { if (e.key === "ArrowLeft") go(-1); if (e.key === "ArrowRight") go(1); }}>
-      <motion.div className="relative mx-auto" style={{ width: W, height: Ht, perspective: 1800, touchAction: "pan-y" }}
-        onPanEnd={(e, info) => { if (info.offset.x < -40) go(1); else if (info.offset.x > 40) go(-1); }}>
-        <motion.div className="relative h-full w-full" style={{ rotateY: spring, transformStyle: "preserve-3d" }}>
-          {PROJECTS.map((p, i) => (
-            <Face key={p.t} p={p} i={i} step={step} R={R} spring={spring}
-              active={i === idx} onSelect={() => setIdx(i)} onOpen={onOpen} />
-          ))}
-        </motion.div>
+    <div ref={ref} className="overflow-hidden pb-4 pt-28 outline-none" tabIndex={0}
+      onPointerEnter={(e) => { if (e.pointerType === "mouse") ctl.current.hover = true; }}
+      onPointerLeave={() => { ctl.current.hover = false; }}
+      onFocus={() => { ctl.current.hover = true; }}
+      onBlur={() => { ctl.current.hover = false; }}
+      onKeyDown={(e) => {
+        if (e.key === "ArrowLeft") focus((cur - 1 + n) % n);
+        if (e.key === "ArrowRight") focus((cur + 1) % n);
+      }}>
+      <motion.div className="relative mx-auto w-full" style={{ height: Ht + 10, touchAction: "pan-y" }}
+        onPan={(e, info) => { const c = ctl.current; c.busy = true; anim.current?.stop(); rot.set(rot.get() + info.delta.x * 0.35); }}
+        onPanEnd={() => { ctl.current.busy = false; ctl.current.v = 0; }}>
+        {PROJECTS.map((p, i) => (
+          <OrbitCard key={p.t} p={p} i={i} n={n} rot={rot} Rx={Rx} W={W} Ht={Ht} onClick={() => click(i)} />
+        ))}
       </motion.div>
 
-      <div className="relative mx-auto mt-10 h-4 max-w-3xl overflow-hidden rounded-full bg-zinc-900">
-        <motion.div className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2"
-          style={{ backgroundImage: "linear-gradient(90deg, rgba(255,184,140,.85) 50%, transparent 50%)", backgroundSize: "56px 100%", backgroundPosition: lane }} />
-      </div>
+      <svg aria-hidden viewBox="0 0 800 140" className="relative mx-auto -mt-16 block w-full" style={{ maxWidth: 2 * Rx + W + 40 }}>
+        <ellipse cx="400" cy="70" rx="380" ry="48" fill="none" strokeWidth="30" style={{ stroke: "var(--color-zinc-800)" }} />
+        <motion.ellipse cx="400" cy="70" rx="380" ry="48" fill="none" strokeWidth="2.5" strokeDasharray="16 16"
+          style={{ stroke: "var(--color-red-400)", strokeDashoffset: dash }} />
+      </svg>
 
       <div className="mt-6 flex items-center justify-center gap-4">
-        <button aria-label="Previous project" disabled={idx === 0} onClick={() => go(-1)} className={arrow}><ChevronLeft size={18} /></button>
+        <button aria-label="Previous project" onClick={() => focus((cur - 1 + n) % n)} className={arrow}><ChevronLeft size={18} /></button>
         <div className="flex gap-2">
           {PROJECTS.map((p, i) => (
-            <button key={p.t} aria-label={`Show ${p.t}`} onClick={() => setIdx(i)}
-              className={`h-2 rounded-full transition-all ${i === idx ? "w-6 bg-red-500" : "w-2 bg-zinc-600"}`} />
+            <button key={p.t} aria-label={`Show ${p.t}`} onClick={() => focus(i)}
+              className={`h-2 rounded-full transition-all ${i === cur ? "w-6 bg-red-500" : "w-2 bg-zinc-600"}`} />
           ))}
         </div>
-        <button aria-label="Next project" disabled={idx === n - 1} onClick={() => go(1)} className={arrow}><ChevronRight size={18} /></button>
+        <button aria-label="Next project" onClick={() => focus((cur + 1) % n)} className={arrow}><ChevronRight size={18} /></button>
       </div>
     </div>
   );
@@ -860,7 +981,7 @@ function Cert({ c, onOpen }) {
     e.currentTarget.style.setProperty("--y", `${e.clientY - r.top}px`);
   };
   return (
-    <motion.div onMouseMove={move} whileHover={{ y: -4 }}
+    <motion.div onMouseMove={move} whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}
       role={clickable ? "button" : undefined} tabIndex={clickable ? 0 : undefined}
       onClick={clickable ? act : undefined}
       onKeyDown={clickable ? (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), act()) : undefined}
@@ -1027,10 +1148,12 @@ export default function Portfolio() {
   return (
     <div style={{ background: "var(--bg)", color: "var(--fg)" }} className="relative min-h-screen scroll-smooth font-sans antialiased">
       <Blooms />
+      <CursorGlow />
       <Navbar />
       <main className="relative z-10">
         <Hero /><About /><Skills /><Experience /><Projects /><Certs /><Contact />
       </main>
+      <BackToTop />
       <footer className="relative z-10 border-t border-zinc-800/80 py-8 text-center text-sm text-zinc-500">
         © {new Date().getFullYear()} B. Abhinav Sai
       </footer>
