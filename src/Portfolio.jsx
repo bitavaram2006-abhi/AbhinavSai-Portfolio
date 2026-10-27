@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useState, useEffect, useRef, useMemo } from "react";
 import {
   motion, AnimatePresence, useScroll, useSpring, useInView, animate,
@@ -788,7 +789,7 @@ function OrbitCard({ p, i, n, rot, Rx, W, Ht, onClick }) {
   );
 }
 
-function Roller({ onOpen }) {
+function Roller({ onOpen, paused }) {
   const reduce = useReducedMotion();
   const narrow = useNarrow(640);
   const mid = useNarrow(1024);
@@ -806,6 +807,7 @@ function Roller({ onOpen }) {
   const inView = useInView(ref, { margin: "-60px" });
   const rot = useMotionValue(0);
   const ctl = useRef({ v: INTRO_SPEED, hover: false, busy: false });
+  ctl.current.paused = paused;
   const anim = useRef(null);
   const [cur, setCur] = useState(0);
 
@@ -817,7 +819,7 @@ function Roller({ onOpen }) {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       const c = ctl.current;
-      if (!c.busy) {
+      if (!c.busy && !c.paused) {
         const target = c.hover ? 0 : BASE_SPEED;
         c.v += (target - c.v) * (1 - Math.exp(-dt * EASE));
         rot.set(rot.get() + c.v * dt);
@@ -851,7 +853,7 @@ function Roller({ onOpen }) {
   const arrow = "flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700 text-red-400 hover:border-red-500/60";
 
   return (
-    <div ref={ref} className="overflow-hidden pb-4 pt-28 outline-none" tabIndex={0}
+    <div ref={ref} className="isolate overflow-hidden pb-4 pt-28 outline-none" tabIndex={0}
       onPointerEnter={(e) => { if (e.pointerType === "mouse") ctl.current.hover = true; }}
       onPointerLeave={() => { ctl.current.hover = false; }}
       onFocus={() => { ctl.current.hover = true; }}
@@ -930,14 +932,14 @@ function Bridge({ onOpen }) {
   );
 }
 
-function Showcase({ onOpen }) {
+function Showcase({ onOpen, paused }) {
   const dark = useIsDark();
   return (
     <div className="relative pt-12">
       <span className="absolute right-0 top-0 inline-flex items-center gap-1.5 rounded-full border border-red-500/40 px-3 py-1 text-xs font-medium text-red-400">
         {dark ? <Moon size={13} /> : <Sun size={13} />} {dark ? MODE_TAG.dark : MODE_TAG.light}
       </span>
-      {dark ? <Roller onOpen={onOpen} /> : <Bridge onOpen={onOpen} />}
+      {dark ? <Roller onOpen={onOpen} paused={paused} /> : <Bridge onOpen={onOpen} />}
     </div>
   );
 }
@@ -952,20 +954,23 @@ function Projects() {
   }, [sel]);
   return (
     <Section id="projects" title="Projects & hackathons" sub="Open a card for the deep dive.">
-      <Showcase onOpen={setSel} />
-      <AnimatePresence>
-        {sel && (
-          <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 p-5 backdrop-blur-sm"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSel(null)}>
-            <motion.div role="dialog" aria-modal="true" aria-label={sel.t} onClick={(e) => e.stopPropagation()}
-              initial={{ scale: 0.9, y: 30, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.9, y: 30, opacity: 0 }}
-              className={`${glass} relative w-full max-w-3xl rounded-2xl p-7`}
-              style={{ boxShadow: `0 0 60px ${sel.color}33`, maxHeight: "88vh", overflowY: "auto" }}>
-              <ProjectDetails p={sel} onClose={() => setSel(null)} />
+      <Showcase onOpen={setSel} paused={!!sel} />
+      {createPortal(
+        <AnimatePresence>
+          {sel && (
+            <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-5 backdrop-blur-sm"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSel(null)}>
+              <motion.div role="dialog" aria-modal="true" aria-label={sel.t} onClick={(e) => e.stopPropagation()}
+                initial={{ scale: 0.9, y: 30, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.9, y: 30, opacity: 0 }}
+                className={`${glass} relative w-full max-w-3xl rounded-2xl p-7`}
+                style={{ boxShadow: `0 0 60px ${sel.color}33`, maxHeight: "88vh", overflowY: "auto" }}>
+                <ProjectDetails p={sel} onClose={() => setSel(null)} />
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </Section>
   );
 }
