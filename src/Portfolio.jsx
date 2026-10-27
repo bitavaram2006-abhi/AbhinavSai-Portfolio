@@ -123,9 +123,13 @@ const PROJECTS = [
 ];
 
 const CERTS = [
-  { t: "AWS Academy Graduate", d: "Machine Learning Foundations & Cloud Foundations", icon: Cloud },
-  { t: "HackerRank Java (Basic)", d: "Skill certification", icon: Code2 },
-  { t: "MongoDB Administration", d: "TechA, Infosys Springboard", icon: ShieldCheck },
+{ t: "AWS Academy Graduate", d: "Machine Learning Foundations & Cloud Foundations", icon: Cloud,
+  files: [
+    { label: "Cloud Foundations", file: "/certs/aws-cloud-certificate.pdf" },
+    { label: "Machine Learning Foundations", file: "/certs/aws-ai-ml-cert.pdf" },
+  ] },
+  { t: "HackerRank Java (Basic)", d: "Skill certification", icon: Code2, file: "/certs/hackerrank-java.png" },
+  { t: "MongoDB Administration", d: "TechA, Infosys Springboard", icon: ShieldCheck, file: "/certs/mongodb-infosys.pdf" },
   { t: "C++ & C", d: "C++ 100% Genius Grade, C 88% Grade A (Sanfoundry)", icon: Award },
   { t: "EF SET C1 Advanced English", d: "Score 68/100", icon: Languages },
   { t: "MoE Innovation Ambassador", d: "Foundation, Reskilling & Advanced", icon: Sparkles },
@@ -441,13 +445,16 @@ function Skills() {
 
 /* ----------------------------- EXPERIENCE ----------------------------- */
 function DocViewer({ doc, onClose }) {
+  const [idx, setIdx] = useState(0);
+  const list = doc.files || null;
+  const cur = list ? list[idx] : doc;
   useEffect(() => {
     const k = (e) => e.key === "Escape" && onClose();
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", k);
     return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", k); };
   }, []);
-  const isPdf = doc.file.toLowerCase().endsWith(".pdf");
+  const isPdf = cur.file.toLowerCase().split("#")[0].endsWith(".pdf");
   return (
     <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
@@ -457,15 +464,25 @@ function DocViewer({ doc, onClose }) {
         <div className="flex items-center justify-between gap-3 border-b border-zinc-800 px-5 py-3">
           <h3 className="font-semibold text-zinc-100">{doc.label}</h3>
           <div className="flex items-center gap-1">
-            <a href={doc.file} target="_blank" rel="noopener noreferrer" aria-label="Open in new tab" className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"><ExternalLink size={18} /></a>
-            <a href={doc.file} download aria-label="Download" className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"><Download size={18} /></a>
+            <a href={cur.file} target="_blank" rel="noopener noreferrer" aria-label="Open in new tab" className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"><ExternalLink size={18} /></a>
+            <a href={cur.file} download aria-label="Download" className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"><Download size={18} /></a>
             <button onClick={onClose} aria-label="Close" className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"><X size={18} /></button>
           </div>
         </div>
+        {list && (
+          <div role="tablist" className="flex flex-wrap gap-2 border-b border-zinc-800 px-5 py-3">
+            {list.map((f, i) => (
+              <button key={f.file} role="tab" aria-selected={i === idx} onClick={() => setIdx(i)}
+                className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${i === idx ? "border-red-500/60 bg-red-500/15 text-red-400" : "border-zinc-700 text-zinc-300 hover:border-red-500/40"}`}>
+                {f.label}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="min-h-0 flex-1 overflow-auto p-2">
           {isPdf
-            ? <iframe src={doc.file} title={doc.label} className="h-full w-full rounded-lg bg-[#ffffff]" />
-            : <img src={doc.file} alt={doc.label} className="mx-auto max-h-full max-w-full object-contain" />}
+            ? <iframe key={cur.file} src={cur.file} title={cur.label || doc.label} className="h-full w-full rounded-lg bg-[#ffffff]" />
+            : <img key={cur.file} src={cur.file} alt={cur.label || doc.label} className="mx-auto max-h-full max-w-full object-contain" />}
         </div>
       </motion.div>
     </motion.div>
@@ -667,28 +684,46 @@ function Projects() {
 }
 
 /* ----------------------------- CERTIFICATIONS ----------------------------- */
-function Cert({ c }) {
+function Cert({ c, onOpen }) {
+  const Icon = c.icon || Award;
+  const clickable = c.file || c.files || c.link;
+  const act = () => (c.file || c.files ? onOpen(c) : c.link && window.open(c.link, "_blank", "noopener,noreferrer"));
   const move = (e) => {
     const r = e.currentTarget.getBoundingClientRect();
     e.currentTarget.style.setProperty("--x", `${e.clientX - r.left}px`);
     e.currentTarget.style.setProperty("--y", `${e.clientY - r.top}px`);
   };
   return (
-    <motion.div onMouseMove={move} whileHover={{ y: -4 }} className={`${glass} group relative overflow-hidden rounded-2xl p-5`}>
+    <motion.div onMouseMove={move} whileHover={{ y: -4 }}
+      role={clickable ? "button" : undefined} tabIndex={clickable ? 0 : undefined}
+      onClick={clickable ? act : undefined}
+      onKeyDown={clickable ? (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), act()) : undefined}
+      className={`${glass} group relative overflow-hidden rounded-2xl p-5 ${clickable ? "cursor-pointer" : ""}`}>
       <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         style={{ background: "radial-gradient(220px circle at var(--x) var(--y), rgba(232,116,59,.28), transparent 70%)" }} />
-      <c.icon className="relative text-orange-400" />
+      <Icon className="relative text-orange-400" />
       <h3 className="relative mt-3 font-semibold text-zinc-100">{c.t}</h3>
       <p className="relative mt-1 text-sm text-zinc-400">{c.d}</p>
+      {clickable && (
+        <span className="relative mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-red-400">
+          <FileText size={15} /> {c.files ? "View certificates" : c.file ? "View certificate" : "Open link"}
+        </span>
+      )}
     </motion.div>
   );
 }
-const Certs = () => (
-  <Section id="certifications" title="Certifications & accreditations">
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{CERTS.map((c) => <Cert key={c.t} c={c} />)}</div>
-  </Section>
-);
 
+function Certs() {
+  const [doc, setDoc] = useState(null);
+  return (
+    <Section id="certifications" title="Certifications & accreditations" sub="Click a card to view the certificate.">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {CERTS.map((c, i) => <Cert key={c.t + i} c={c} onOpen={(x) => setDoc({ label: x.t, file: x.file, files: x.files })} />)}
+      </div>
+      <AnimatePresence>{doc && <DocViewer doc={doc} onClose={() => setDoc(null)} />}</AnimatePresence>
+    </Section>
+  );
+}
 /* ----------------------------- CONTACT ----------------------------- */
 const RULES = {
   name: (v) => (v.trim().length >= 2 ? "" : "Enter your name (2+ characters)."),
